@@ -9,9 +9,10 @@ uses {$IFDEF UNIX} {$IFDEF UseCThreads}
   Classes,
   fphttpserver,
   fpmimetypes,
-  exedata,
   httpdefs,
-  regexpr;
+  regexpr,
+  
+  exedata,logger,fileops;
 
 type
 
@@ -25,6 +26,7 @@ type
     FWikiFile: string;
     FBackupDir: string;
     FUser: string;
+    FUserFile: string;
     FPassword: string;
     FUploadDir: string;
     procedure SetBaseDir(const AValue: string);
@@ -36,7 +38,7 @@ type
   protected
     procedure CheckMimeLoaded;
     property MimeLoaded: boolean read FMimeLoaded;
-    function ParseUploadPlugin(Value: string): boolean;
+    function ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
 
   public
     procedure HandleRequest(var ARequest: TFPHTTPConnectionRequest;
@@ -49,12 +51,9 @@ var
   Serv: TTestHTTPServer;
 
   { TTestHTTPServer }
-  procedure Log(const Msg: string);
-  begin
-    if (Verbose) then
-      WriteLn(Msg);
-  end;
-
+  //
+  // Base directory for HTTP Server
+  //
   procedure TTestHTTPServer.SetBaseDir(const AValue: string);
   begin
     if FBaseDir = AValue then
@@ -64,6 +63,7 @@ var
       FBaseDir := IncludeTrailingPathDelimiter(FBaseDir);
   end;
 
+  //Make sure mime data is loaded
   procedure TTestHTTPServer.CheckMimeLoaded;
   begin
     if (not MimeLoaded) and (MimeTypesFile <> '') then
@@ -73,6 +73,7 @@ var
     end;
   end;
 
+  //Return group matches from a regex
   function MatchRegex(const RegExpr: string; const Text: string;
   var Matches: TStrings): boolean;
   var
@@ -105,90 +106,15 @@ var
     end;
   end;
 
-  //Make the directories needed for file in Dirs
-  function MakeDirs(Dirs: string): boolean;
-  var
-    i: integer;
-    D: string;
-    L: TStringList;
-    OK: boolean;
-  begin
-    Result := False;
-    Dirs := ExtractFilePath(Dirs);
-    //Exit if Dirs is not ended with the directory separator
-    if Dirs[Length(Dirs)] <> DirectorySeparator then
-      Exit;
-
-    try
-      //Get each one of the Paths recursively: e.g. for 'ok/ok1/ok2/'
-      //make a list: [ 'ok/ok1/ok2', 'ok/ok1', 'ok', '']
-      D := Dirs;
-      L := TStringList.Create;
-      repeat
-        D := ExtractFileDir(D);
-        L.Add(D);
-      until D = '';
-
-      //Create each of the needed directories
-      OK := True;
-      for i := L.Count - 2 downto 0 do
-        OK := OK and CreateDir(L[i]);
-      Result := OK;
-    except
-    end;
-  end;
-
-  function CopyFile(FromName: string; ToName: string; Delete: boolean = False): boolean;
-  var
-    SourceF, DestF: TFileStream;
-  begin
-    //Return failed copy by default
-    Result := False;
-    if FromName = ToName then
-      Exit;
-    try
-      MakeDirs(ToName);
-      Writeln('Copying ', FromName, ' to ', ToName);
-      SourceF := TFileStream.Create(FromName, fmOpenRead);
-      DestF := TFileStream.Create(ToName, fmCreate);
-      DestF.CopyFrom(SourceF, SourceF.Size);
-      //Now the copy succeded
-      Result := True;
-    except
-    end;
-    SourceF.Free;
-    DestF.Free;
-
-    //Delete original file if asked
-    if Result and Delete then
-      DeleteFile(FromName);
-  end;
-
-  function MakeBackup(FromName: string; ToName: string): boolean;
-  var
-    OK: boolean;
-    Suffix: string;
-    Ext: string;
-    Dir: string;
-    FName: string;
-    BakName: string;
-  begin
-    Ext := ExtractFileExt(ToName);
-    Dir := ExtractFilePath(ToName);
-    FName := ExtractFileName(ToName);
-    FName := ChangeFileExt(FName, '');
-    Suffix := FormatDateTime('_YYYY_MM_DD__hh_nn_ss', Now);
-    BakName := Dir + FName + Suffix + Ext;
-    OK := CopyFile(FromName, BakName);
-    //Now delete old files
-    Result := OK;
-  end;
-
-  function TTestHTTPServer.ParseUploadPlugin(Value: string): boolean;
+  // Parse upload dir, backup dir, etc from post request
+  function TTestHTTPServer.ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
   var
     SL: TStrings;
     RegExp: string;
+    Value: String;
   begin
+    Value := ARequest.ContentFields.Values['UploadPlugin'];
+    FUserFile := ARequest.ContentFields.Values['userfile'];
     RegExp := '(?s)backupDir=(.*?);user=(.*?);password=(.*?);uploaddir=(.*?);;';
     SL := TStringList.Create;
     if MatchRegex(RegExp, Value, SL) and (SL.Count = 4) then
@@ -211,7 +137,6 @@ var
   var
     i: word;
     OK: boolean;
-    FName: string;
     BakFile: string;
   begin
     {WriteLn('ARequest.FieldCount: ', ARequest.FieldCount);
@@ -234,11 +159,10 @@ var
     WriteLn('Value of UploadPlugin -->', ARequest.ContentFields.Values['UploadPlugin']);
     WriteLn('Value of userfile     -->', ARequest.ContentFields.Values['userfile']);}
     OK := False;
-    FName := ARequest.ContentFields.Values['userfile'];
-    if ParseUploadPlugin(ARequest.ContentFields.Values['UploadPlugin']) then
+    if ParseUploadPlugin(ARequest) then
     begin
       //Move file to Uploaddir
-      FWikiFile := ConcatPaths([FUploadDir, FName]);
+      FWikiFile := ConcatPaths([FUploadDir, FUserFile]);
       OK := CopyFile(ARequest.Files[0].LocalFileName, FWikiFile, True);
     end;
     if OK then
@@ -249,7 +173,7 @@ var
     AResponse.SendContent;
 
     //Make backup
-    BakFile := ConcatPaths([FBackupDir, FName]);
+    BakFile := ConcatPaths([FBackupDir, FUserFile]);
     MakeBackup(FWikiFile, BakFile);
   end;
 
@@ -353,7 +277,8 @@ var
   end;
 
 begin
-  Verbose := True;
+  LogVerbose := True;
+  LogDebug := 0;
   PrintHeader();
   try
     ExtractData();

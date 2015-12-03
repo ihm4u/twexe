@@ -5,27 +5,24 @@ unit exedata;
 interface
 
 uses
-  Classes, SysUtils, Zipper;
+  // Free pascal units
+  Classes, SysUtils, Zipper,
+
+  //Project units 
+  logger;
 
 type
   TCallacks = class(TObject)
     class procedure OnOpenZippedStream(UnZipper: TObject; var FZipStream: TStream);
   end;
 
-var
-  Verbose: boolean;
-
 procedure ExtractData(ExeFile: string = ''; Delete: boolean = False);
 
 implementation
 
-procedure Log(const Msg: string);
-begin
-  if (Verbose) then
-    WriteLn(Msg);
-end;
-
-//Advance stream until zip file header is found
+//
+//Make a Memory Stream containing the data to unzip
+//
 class procedure TCallacks.OnOpenZippedStream(UnZipper: TObject; var FZipStream: TStream);
 var
   W: DWord;
@@ -61,6 +58,9 @@ begin
   end;
 end;
 
+//
+// Extract ZIP file contained in the executable
+//
 procedure ExtractData(ExeFile: string = ''; Delete: boolean = False);
 var
   UnZipper: TUnZipper;
@@ -86,6 +86,9 @@ begin
   end;
 end;
 
+//
+// Replace ZIP file contained in the executable with specified data file
+//
 procedure AppendFile(const ExeFile: string; const DataFile: string);
 var
   Zipper: TZipper;
