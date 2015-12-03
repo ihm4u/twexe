@@ -12,7 +12,7 @@ uses {$IFDEF UNIX} {$IFDEF UseCThreads}
   httpdefs,
   regexpr,
   
-  exedata,logger,fileops;
+  exedata,logger,fileops,version;
 
 type
 
@@ -274,6 +274,7 @@ var
     WriteLn('▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁');
     WriteLn('⚜ Single File TiddlyWiki executable ⚜');
     WriteLn('▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔');
+    WriteLn('Version: ',_VERSION);
   end;
 
 begin

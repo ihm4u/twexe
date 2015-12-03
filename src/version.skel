@@ -1,0 +1,9 @@
+unit version;
+
+interface
+
+Const
+   _VERSION = '___VERSION___';
+
+implementation
+end.
