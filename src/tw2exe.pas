@@ -135,9 +135,10 @@ var
   procedure TTestHTTPServer.HandlePostReq(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
   var
-    i: word;
     OK: boolean;
     BakFile: string;
+    ExeName: string;
+    UserFName: string;
   begin
     {WriteLn('ARequest.FieldCount: ', ARequest.FieldCount);
     WriteLn('ARequest.ContentFields.Count: ', ARequest.ContentFields.Count);
@@ -162,9 +163,15 @@ var
     if ParseUploadPlugin(ARequest) then
     begin
       //Move file to Uploaddir
-      FWikiFile := ConcatPaths([FUploadDir, FUserFile]);
+      UserFName := FileNameNoExt(FUserFile);
+      ExeName := GetEXEName();
+      if ( UserFName <> EXEName ) then
+         Log('User file "'+UserFName+'" is different from executable name, ignoring.');
+      FWikiFile := ConcatPaths([FUploadDir, ExeName])+'.html';
       OK := CopyFile(ARequest.Files[0].LocalFileName, FWikiFile, True);
     end;
+    
+    //Send 200 OK to the browser if we were able to save the file
     if OK then
       AResponse.Code := 200
     else
@@ -172,8 +179,8 @@ var
 
     AResponse.SendContent;
 
-    //Make backup
-    BakFile := ConcatPaths([FBackupDir, FUserFile]);
+    //Make backup in specified Backup Dir
+    BakFile := ConcatPaths([FBackupDir, ExeName + '.html']);
     MakeBackup(FWikiFile, BakFile);
   end;
 
@@ -225,7 +232,7 @@ var
       HandleGetReq(ARequest, AResponse);
       Exit;
     end;
-    if ARequest.Method = 'POST' then
+    if (ARequest.Method = 'POST') and (ARequest.URI = '/store') then
     begin
       HandlePostReq(ARequest, AResponse);
       Exit;

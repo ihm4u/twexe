@@ -17,8 +17,34 @@ type
   end;
 
 procedure ExtractData(ExeFile: string = ''; Delete: boolean = False);
+function GetEXEName():String;
+function GetEXEPath():String;
+function FileNameNoExt(Name:String):String;
 
 implementation
+//
+// Get executable name, without extension, if any.
+//
+function GetEXEName():String;
+begin
+   Result:=FileNameNoExt(ParamStr(0));
+end;
+
+//
+// Get File name without extension
+//
+function FileNameNoExt(Name:String):String;
+begin
+   Result:=ChangeFileExt(ExtractFileName(Name),'');
+end;
+
+//
+// Get executable path, including trailing separator
+//
+function GetEXEPath():String;
+begin
+   Result:=ExtractFilePath(ParamStr(0));
+end;
 
 //
 //Make a Memory Stream containing the data to unzip
