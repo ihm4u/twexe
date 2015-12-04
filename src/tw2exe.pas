@@ -3,8 +3,12 @@ program tw2exe;
 {$mode objfpc}{$H+}
 {$define UseCThreads}
 
-uses {$IFDEF UNIX} {$IFDEF UseCThreads}
-  cthreads, {$ENDIF} {$ENDIF}
+uses 
+  {$IFDEF UNIX} 
+  {$IFDEF UseCThreads}
+  cthreads, 
+  {$ENDIF}
+  {$ENDIF}
   SysUtils,
   Classes,
   fphttpserver,
@@ -12,7 +16,13 @@ uses {$IFDEF UNIX} {$IFDEF UseCThreads}
   httpdefs,
   regexpr,
   
-  exedata,logger,fileops,version;
+  exedata,logger,fileops,version
+  {$ifdef unix}
+  ,unixlib
+  {$endif}
+  {$ifdef windows}
+  ,windowslib
+  {$endif};
 
 type
 
@@ -140,25 +150,6 @@ var
     ExeName: string;
     UserFName: string;
   begin
-    {WriteLn('ARequest.FieldCount: ', ARequest.FieldCount);
-    WriteLn('ARequest.ContentFields.Count: ', ARequest.ContentFields.Count);
-    //WriteLn('ARequest.Content: ', ARequest.Content);
-    for i := 0 to ARequest.FieldCount - 1 do
-    begin
-      writeln('Received Field: ' + ARequest.FieldNames[i], ',', ARequest.FieldValues[i]);
-    end;
-
-    for i := 0 to ARequest.ContentFields.Count - 1 do
-    begin
-      writeln('Received Content Field: ' + ARequest.ContentFields[i]);
-    end;
-    for i := 0 to ARequest.Files.Count - 1 do
-    begin
-      writeln('Received Filename: ' + ARequest.Files[i].LocalFileName);
-    end;
-
-    WriteLn('Value of UploadPlugin -->', ARequest.ContentFields.Values['UploadPlugin']);
-    WriteLn('Value of userfile     -->', ARequest.ContentFields.Values['userfile']);}
     OK := False;
     if ParseUploadPlugin(ARequest) then
     begin
@@ -182,6 +173,8 @@ var
     //Make backup in specified Backup Dir
     BakFile := ConcatPaths([FBackupDir, ExeName + '.html']);
     MakeBackup(FWikiFile, BakFile);
+
+    //FIXME: Append file to executable
   end;
 
   procedure TTestHTTPServer.HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
@@ -195,7 +188,15 @@ var
     if (length(FN) > 0) and (FN[1] = '/') then
       Delete(FN, 1, 1);
     DoDirSeparators(FN);
-    FN := BaseDir + FN;
+
+    //If the request is for the wiki, serve from the unzipped file
+    //Otherwise server from the server base directory
+    if FileNameNoExt(FN) = GetEXEName() then
+       FN := GetUnZipPath() + ChangeFileExt(FN,'.html')
+    else
+       FN := BaseDir + FN;
+ 
+    //Now serve the file to the client
     if FileExists(FN) then
     begin
       F := TFileStream.Create(FN, fmOpenRead);
@@ -245,11 +246,10 @@ var
   begin
     Serv := TTestHTTPServer.Create(nil);
     try
-      //Serv.BaseDir := ExtractFilePath(ParamStr(0));
-      Serv.BaseDir := '.' + DirectorySeparator;
+      Serv.BaseDir := GetServerDocPath();
       {$ifdef unix}
       Serv.MimeTypesFile := '/etc/mime.types';
-{$endif}
+      {$endif}
       Serv.Threaded := False;
       Serv.Port := Port;
       Write('Serving on 127.0.0.1:', Serv.Port);
@@ -284,20 +284,72 @@ var
     WriteLn('Version: ',_VERSION);
   end;
 
-begin
-  LogVerbose := True;
-  LogDebug := 0;
-  PrintHeader();
-  try
-    ExtractData();
-  except
-    on Exception do
-    begin
-      Writeln('Aborting.');
-      Halt(2);
+  //Extract data or abort
+  procedure HandleExtractData();
+  begin
+    try
+      ExtractData();
+    except
+      on Exception do
+      begin
+        Writeln('Aborting.');
+        Halt(2);
+      end;
     end;
   end;
 
+  procedure ConvertWikiToExe(DataFile:string);
+  Var
+    OK:Boolean;
+    OutExeFN:String;
+    Ext:string;
+  begin
+    Ext := GetOSEXEExt();
+    OutExeFN := FileNameNoExt(DataFile) + Ext;
+    WriteLn('Generating ''' + OutExeFN + '''');
+    OK:=CopyFile(GetEXEFile(),OutExeFN);
+    
+    if (OK) then
+    begin
+      AppendFile(OutExeFN,DataFile);
+      WriteLn('Congratulations! '+ FileNameNoExt(DataFile) 
+              + ' has been converted to ' + OutExeFN + '.');
+    end
+      else
+      Error('Unable to create ' + OutExeFN);
+  end;
+
+begin
+  LogVerbose := True;
+  LogDebug := 0;
+
+  //Print version info and header
+  If not IAmShadow() then
+    PrintHeader();
+
+  //If a parameter is specified convert the file to an executable
+  //in the same directory
+  if (ParamStr(1) <> '-z')  and (ParamStr(1) <> '') then
+  begin
+    ConvertWikiToExe(ParamStr(1));
+    Exit;
+  end;
+
+  //Run shadow and exit,
+  //continue if we're not the shadow
+  if RunShadow() then
+  begin
+     Log('Exiting, shadow created and running.');
+     Exit;
+  end;
+
+
+
+  //Extract data bundled in executable
+  HandleExtractData();
+
+  //Start HTTP server
   Serv := StartServer();
+
   //Nothing runs here because server is single-threaded for now
 end.

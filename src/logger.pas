@@ -12,6 +12,8 @@ var
   LogDebug:Integer;
 
 procedure Log(const Msg: string);
+procedure Dbg(const Msg: string; const Level: Integer=1);
+procedure Error(const Msg: string);
 
 implementation
 
@@ -26,4 +28,10 @@ begin
   if (Level<=LogDebug) then
     WriteLn(Msg);
 end;
+
+procedure Error(const Msg: string);
+begin
+    WriteLn(Msg);
+end;
+
 end.

@@ -13,6 +13,8 @@ uses
   function MakeDirs(Dirs: string): boolean;
   function CopyFile(FromName: string; ToName: string; Delete: boolean = False): boolean;
   function MakeBackup(FromName: string; ToName: string): boolean;
+  function FindZipHdr(const FileName:string; const StartAt:Int64=0):Int64;
+  function FindZipHdr(Stream:TStream; const StartAt:Int64=0):Int64;
 
 implementation
 
@@ -26,8 +28,13 @@ implementation
   begin
     Result := False;
     Dirs := ExtractFilePath(Dirs);
+
+    //Exit if directory is already there
+    if DirectoryExists(Dirs) then
+      Exit;
+
     //Exit if Dirs is not ended with the directory separator
-    if Dirs[Length(Dirs)] <> DirectorySeparator then
+    if (Length(Dirs) = 0) or (Dirs[Length(Dirs)] <> DirectorySeparator) then
       Exit;
 
     try
@@ -38,7 +45,7 @@ implementation
       repeat
         D := ExtractFileDir(D);
         L.Add(D);
-      until D = '';
+      until (D = '') or (D='/');
 
       //Create each of the needed directories
       OK := True;
@@ -67,8 +74,10 @@ implementation
       Result := True;
     except
     end;
-    SourceF.Free;
-    DestF.Free;
+    if Assigned(SourceF) then
+      FreeAndNil(SourceF);
+    if Assigned(DestF) then
+      FreeAndNil(DestF);
 
     //Delete original file if asked
     if Result and Delete then
@@ -91,8 +100,42 @@ implementation
     Suffix := FormatDateTime('_YYYY_MM_DD__hh_nn_ss', Now);
     BakName := Dir + FName + Suffix + Ext;
     OK := CopyFile(FromName, BakName);
-    //Now delete old files
+    //FIXME: Now delete old files
     Result := OK;
   end;
 
+  function FindZipHdr(const FileName:string; const StartAt:Int64=0):Int64;
+  Var
+    Stream: TStream;
+  begin
+    Stream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+    Result := FindZipHdr(Stream,StartAt);
+    FreeAndNil(Stream);
+  end;
+
+  function FindZipHdr(Stream:TStream; const StartAt:Int64=0):Int64;
+  var
+    W: DWord;
+    ZipPos: Int64;
+    OldPos: Int64;
+  const
+    //Shift the header signature one bit right because otherwise it
+    //can be found in the executable also
+    ZipHDR = $04034b50 shr 1;
+  begin
+    Result := -1;
+    Stream.Seek(StartAt, soBeginning);
+    repeat
+      W := Stream.ReadDWord();
+    until (W = ZipHDR shl 1) or (Stream.Size = Stream.Position);
+
+    Stream.Seek(-4, soCurrent);
+
+    if (Stream.Size = Stream.Position) then
+      ZipPos := -1
+    else
+      ZipPos := Stream.Position;
+
+    Result := ZipPos;
+  end;
 end.

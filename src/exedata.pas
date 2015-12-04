@@ -6,28 +6,71 @@ interface
 
 uses
   // Free pascal units
-  Classes, SysUtils, Zipper,
+  Classes, SysUtils, Zipper, Process,
 
   //Project units 
-  logger;
+  logger,fileops,
+  {$ifdef unix}
+  unixlib
+  {$endif}
+  {$ifdef windows}
+  windowslib
+  {$endif}
+  ;
 
 type
   TCallacks = class(TObject)
     class procedure OnOpenZippedStream(UnZipper: TObject; var FZipStream: TStream);
   end;
 
+//Return complete file name and path of the original executable (not shadow)
+function GetEXEFile():String;
+
+//Extract appended zip file in the executable
 procedure ExtractData(ExeFile: string = ''; Delete: boolean = False);
+
+//Compress data and append it to specified executable
+procedure AppendFile(const ExeFile:string; const DataFile: string);
+
+//Get Name of original executable (not shadow), without extension
 function GetEXEName():String;
+
+//Get Path of original executable (not shadow), including directory separator
 function GetEXEPath():String;
+
+//Return the name of the file without extension or directory path
 function FileNameNoExt(Name:String):String;
 
+//Run a shadow executable of the current one
+function RunShadow():Boolean;
+
+//Returns True if the currently running process is a shadow
+function IAmShadow():Boolean;
+
+function GetUnZipPath():string;
+function GetServerDocPath():string;
+
 implementation
+
+//
+// Get executable name, without extension, if any.
+//
+function GetEXEFile():String;
+begin
+  If IAmShadow() then
+    Result:=ParamStr(2)
+  else 
+    Result:=ParamStr(0);
+end;
+
 //
 // Get executable name, without extension, if any.
 //
 function GetEXEName():String;
 begin
    Result:=FileNameNoExt(ParamStr(0));
+   if (Result[1]='_') then
+      Delete(Result,1,1);
 end;
 
 //
@@ -42,33 +85,130 @@ end;
 // Get executable path, including trailing separator
 //
 function GetEXEPath():String;
+Var
+   Exe:string;
 begin
-   Result:=ExtractFilePath(ParamStr(0));
+   Exe:=ParamStr(0);
+   
+   if IAmShadow() then
+      Exe:=ParamStr(2)
+   else
+      Result:=ExtractFilePath(Exe);
 end;
+
+function IAmShadow():Boolean;
+Var
+   ExeName:string;
+begin
+   Result:=False;
+   ExeName:=FileNameNoExt(ParamStr(0));
+   If ExeName[1]='_' then
+      Result:=True;
+end;
+
+//
+// Execute process
+//
+function RunCmd(const Cmd: string; var Output: string; const Async: boolean = False): integer;
+var
+  Out: TStrings;
+  AProcess: TProcess;
+begin
+  Result := -1;
+  AProcess := TProcess.Create(nil);
+  Out := TStringList.Create;
+  try
+    AProcess.CommandLine := Cmd;
+    if Async then
+      AProcess.Options := AProcess.Options // + [poNoConsole]
+    else
+      AProcess.Options := AProcess.Options + [poWaitOnExit, poUsePipes,
+      poNoConsole, poStderrToOutPut];
+
+    AProcess.Execute;
+    Result:= 0;
+
+    if not Async then
+    begin
+      Out.BeginUpdate;
+      Out.Clear;
+      Out.LoadFromStream(AProcess.Output);
+      Out.EndUpdate;
+      Output := Out.Text;
+      Result := AProcess.ExitStatus;
+    end
+  finally
+    if Assigned(AProcess) then
+      FreeAndNil(AProcess);
+    if Assigned(Out) then
+      FreeAndNil(Out);
+  end;
+end;
+
+//
+// Run copy of executable to allow writing over the original executable
+// The caller is responsible for exiting
+//
+function RunShadow():Boolean;
+Var
+  OK:Boolean;
+  NewExe:string;
+  Out:string;
+  Cmd:string;
+begin
+  Out:='';
+  //Exit if we're already running in a shadow
+  Result:=False;
+  if IAmShadow() then
+    Exit;
+
+  //Copy executable to shadow file and run it
+  NewExe := GetTempDir() + '_' + GetEXEName();
+  Cmd := NewExe + ' -z "' + ParamStr(0) + '"';
+  Log('Creating shadow: '+Cmd);
+  try
+    OK:=CopyFile( ParamStr(0), NewExe );
+  except
+    on EAccessViolation do
+      begin
+        Error(''''+ GetEXEName + ''' is already running.');
+        Halt(3);
+      end;
+    on E: EFCreateError do
+      begin
+        Error('Unable to create '''+ NewExe + ''': ' + E.Message);
+        Halt(4);
+      end;
+  end;
+  
+  //Set executable bit on file and run it
+  if (OK) then
+  begin
+    SetExecutePermission(NewExe);
+    OK:= RunCmd(Cmd,Out,True) <> -1;
+  end
+  else
+    Error('Unable to copy "' + ParamStr(0) + '"executable to create shadow: '+NewExe);
+  Result:=OK;
+end;
+
 
 //
 //Make a Memory Stream containing the data to unzip
 //
 class procedure TCallacks.OnOpenZippedStream(UnZipper: TObject; var FZipStream: TStream);
 var
-  W: DWord;
   MemStr: TMemoryStream;
   ZipPos: int64;
-const
-  //Shift the header signature one bit right because otherwise it
-  //can be found in the executable also
-  ZipHDR = $04034b50 shr 1;
 begin
   FZipStream := TFileStream.Create(ParamStr(0), fmOpenRead or fmShareDenyWrite);
-  repeat
-    W := FZipStream.ReadDWord();
-  until (W = ZipHDR shl 1) or (FZipStream.Size = FZipStream.Position);
-
-  FZipStream.Seek(-4, soFromCurrent);
-  ZipPos := FZipStream.Position;
+  //Jump to position 1000000 to make the search faster, since we
+  //know the executable size is larger than 1000000. Note that this number
+  //must be divisible by 4, otherwise the ReadDWord will be off-base
+  ZipPos := FindZipHdr(FZipStream,1000000);
 
   //Copy Zip data to a Memory Stream
-  if (W = ZipHDR shl 1) then
+  if (ZipPos <> -1) then
   begin
     Log('Found data at position: ' + IntToStr(ZipPos));
     MemStr := TMemoryStream.Create;
@@ -100,9 +240,9 @@ begin
     if ExeFile = '' then
       ExeFile := ParamStr(0);
     UnZipper.FileName := ExeFile;
-    //UnZipper.OutputPath := GetAppConfigDir(False);
+    UnZipper.OutputPath := GetUnZipPath();
     UnZipper.UnZipAllFiles;
-    Log('Extracted data in ' + GetCurrentDir());
+    Log('Extracted data in ' + UnZipper.OutputPath);
   finally
     FreeAndNil(CB);
     if Assigned(UnZipper) then
@@ -112,19 +252,18 @@ begin
   end;
 end;
 
-//
-// Replace ZIP file contained in the executable with specified data file
-//
-procedure AppendFile(const ExeFile: string; const DataFile: string);
+// Zip the specified file to a stream
+function ZipDataFile(const DataFile: string):String;
 var
   Zipper: TZipper;
   TmpFile: string;
   S: TStringList;
 
 begin
+  Result:='';
   //Zip data file into a temporary zip file
   Zipper := TZipper.Create;
-  TmpFile := GetTempDir() + DataFile + '.zip';
+  TmpFile := GetTempDir() + FileNameNoExt(DataFile) + '.zip';
   S := TStringList.Create;
   S.Add(DataFile);
   with Zipper do
@@ -135,9 +274,46 @@ begin
       Free;
     end;
   end;
-
-  //Append zipped file to executable
-  //DeleteFile(PChar(TmpFile));
+  Result:=TmpFile;
 end;
 
+//
+// Replace ZIP file contained in the executable with specified data file
+//
+procedure AppendFile(const ExeFile:string; const DataFile: string);
+Var
+  ZFN: string;
+  ZFS: TStream;
+  ExeFS: TStream;
+  ZipPos: Int64;
+begin
+  ZFN:=ZipDataFile(DataFile);
+
+  //Append zipped file to executable
+  ExeFS := TFileStream.Create(ExeFile, fmOpenReadWrite);
+  ZFS := TFileStream.Create(ZFN, fmOpenRead or fmShareDenyWrite);
+  ZipPos:=FindZipHdr(ExeFS,1000000);
+
+  //FindZipHdr leaves the stream at the end of the file or 
+  // at the start of the Zip header, so we can copy the zip
+  // stream here
+  ExeFS.CopyFrom(ZFS, ZFS.Size);
+  ExeFS.Size := ZipPos + ZFS.Size;
+
+  FreeAndNil(ExeFS);
+  FreeAndNil(ZFS);
+
+  //Delete temporary zip file
+  DeleteFile(PChar(ZFN));
+end;
+
+function GetUnZipPath():string;
+begin
+   Result:= GetTempDir() + GetEXEName() + DirectorySeparator;
+end;
+
+function GetServerDocPath():string;
+begin
+   Result := GetEXEPath();
+end;
 end.
