@@ -1,4 +1,4 @@
-program tw2exe;
+program twexe;
 
 {$mode objfpc}{$H+}
 {$define UseCThreads}

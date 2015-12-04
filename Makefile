@@ -1,6 +1,6 @@
-BINARY=tw2exe
+BINARY=twexe
 SRCFILES=src/*.pas src/*.pp src/version.pas
-SRC=src/tw2exe.pas
+SRC=src/twexe.pas
 EMPTY_TW5=src/empty.html
 
 PRODOPTS=

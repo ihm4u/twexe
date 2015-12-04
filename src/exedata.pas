@@ -219,7 +219,7 @@ begin
   else
   begin
     Error('No TiddlyWiki found.');
-    Error('Please download tw2exe again.');
+    Error('Please download twexe again.');
     FreeAndNil(FZipStream);
   end;
 end;
