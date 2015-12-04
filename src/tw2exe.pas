@@ -252,12 +252,12 @@ var
       {$endif}
       Serv.Threaded := False;
       Serv.Port := Port;
-      Write('Serving on 127.0.0.1:', Serv.Port);
+      Msg('Serving on http://127.0.0.1:' + IntToStr(Serv.Port),False);
       Serv.Active := True;
     except
       On Exception do
       begin
-        WriteLn('...Busy');
+        Msg('...Busy');
         FreeAndNil(Serv);
       end;
     end;
@@ -278,10 +278,10 @@ var
 
   procedure PrintHeader();
   begin
-    WriteLn('▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁');
-    WriteLn('⚜ Single File TiddlyWiki executable ⚜');
-    WriteLn('▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔');
-    WriteLn('Version: ',_VERSION);
+    Msg('▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁');
+    Msg('⚜ Single File TiddlyWiki executable ⚜');
+    Msg('▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔');
+    Msg('Version: '+_VERSION);
   end;
 
   //Extract data or abort
@@ -290,9 +290,10 @@ var
     try
       ExtractData();
     except
-      on Exception do
+      on E:Exception do
       begin
-        Writeln('Aborting.');
+        Error('Error extracting data: '+E.Message);
+        Error('Aborting.');
         Halt(2);
       end;
     end;
@@ -306,17 +307,18 @@ var
   begin
     Ext := GetOSEXEExt();
     OutExeFN := FileNameNoExt(DataFile) + Ext;
-    WriteLn('Generating ''' + OutExeFN + '''');
+    Msg('Generating ''' + OutExeFN + '''...');
     OK:=CopyFile(GetEXEFile(),OutExeFN);
     
     if (OK) then
     begin
       AppendFile(OutExeFN,DataFile);
-      WriteLn('Congratulations! '+ FileNameNoExt(DataFile) 
-              + ' has been converted to ' + OutExeFN + '.');
+      Msg('Congratulations! '''+ ExtractFileName(DataFile) 
+              + ''' has been converted to ''' + OutExeFN + '''.');
+      SetExecutePermission(OutExeFN);
     end
       else
-      Error('Unable to create ' + OutExeFN);
+      Error('Unable to create ''' + OutExeFN + '''');
   end;
 
 begin
@@ -342,8 +344,6 @@ begin
      Log('Exiting, shadow created and running.');
      Exit;
   end;
-
-
 
   //Extract data bundled in executable
   HandleExtractData();

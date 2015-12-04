@@ -218,8 +218,8 @@ begin
   end
   else
   begin
-    WriteLn('No TiddlyWiki found.');
-    WriteLn('Please download tw2exe again.');
+    Error('No TiddlyWiki found.');
+    Error('Please download tw2exe again.');
     FreeAndNil(FZipStream);
   end;
 end;
@@ -257,15 +257,21 @@ function ZipDataFile(const DataFile: string):String;
 var
   Zipper: TZipper;
   TmpFile: string;
-  S: TStringList;
+  S:TStrings;
+  OldDir,Dir:string;
 
 begin
   Result:='';
   //Zip data file into a temporary zip file
+  Dir:=ExtractFileDir(DataFile);
+  OldDir:=GetCurrentDir();
+  If (Dir<>'') then
+    SetCurrentDir(Dir);
+
   Zipper := TZipper.Create;
+  S:=TStringList.Create;
+  S.Add(ExtractFileName(DataFile));
   TmpFile := GetTempDir() + FileNameNoExt(DataFile) + '.zip';
-  S := TStringList.Create;
-  S.Add(DataFile);
   with Zipper do
   begin
     try
@@ -274,6 +280,9 @@ begin
       Free;
     end;
   end;
+
+  If (Dir<>'') then
+    SetCurrentDir(OldDir);
   Result:=TmpFile;
 end;
 
@@ -286,25 +295,31 @@ Var
   ZFS: TStream;
   ExeFS: TStream;
   ZipPos: Int64;
+  CleanEXESize: Int64;
 begin
   ZFN:=ZipDataFile(DataFile);
 
   //Append zipped file to executable
   ExeFS := TFileStream.Create(ExeFile, fmOpenReadWrite);
   ZFS := TFileStream.Create(ZFN, fmOpenRead or fmShareDenyWrite);
+  CleanEXESize := ExeFS.Size;
   ZipPos:=FindZipHdr(ExeFS,1000000);
+  if (ZipPos<>-1) then
+    CleanEXESize := ZipPos;
 
   //FindZipHdr leaves the stream at the end of the file or 
   // at the start of the Zip header, so we can copy the zip
   // stream here
   ExeFS.CopyFrom(ZFS, ZFS.Size);
-  ExeFS.Size := ZipPos + ZFS.Size;
+
+  //Make sure the file size is correct
+  //so that spurious data is truncated
+  ExeFS.Size := CleanEXESize + ZFS.Size;
 
   FreeAndNil(ExeFS);
   FreeAndNil(ZFS);
 
   //Delete temporary zip file
-  DeleteFile(PChar(ZFN));
 end;
 
 function GetUnZipPath():string;

@@ -66,7 +66,7 @@ implementation
       Exit;
     try
       MakeDirs(ToName);
-      Writeln('Copying ', FromName, ' to ', ToName);
+      Log('Copying ''' + FromName + ''' to ''' + ToName + '''');
       SourceF := TFileStream.Create(FromName, fmOpenRead);
       DestF := TFileStream.Create(ToName, fmCreate);
       DestF.CopyFrom(SourceF, SourceF.Size);
@@ -117,25 +117,25 @@ implementation
   var
     W: DWord;
     ZipPos: Int64;
-    OldPos: Int64;
   const
     //Shift the header signature one bit right because otherwise it
     //can be found in the executable also
     ZipHDR = $04034b50 shr 1;
   begin
-    Result := -1;
+    ZipPos := -1;
+    W := 0;
     Stream.Seek(StartAt, soBeginning);
     repeat
       W := Stream.ReadDWord();
     until (W = ZipHDR shl 1) or (Stream.Size = Stream.Position);
 
-    Stream.Seek(-4, soCurrent);
-
-    if (Stream.Size = Stream.Position) then
-      ZipPos := -1
-    else
+    if (W = ZipHDR shl 1) then //Zip Header found
+    begin
+      Stream.Seek(-4, soCurrent);
       ZipPos := Stream.Position;
+    end;
 
+    Log('Zip Hdr at Pos: '+IntToStr(ZipPos)+' StrPos: '+IntToStr(Stream.Position));
     Result := ZipPos;
   end;
 end.
