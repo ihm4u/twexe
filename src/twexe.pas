@@ -49,6 +49,7 @@ type
     procedure CheckMimeLoaded;
     property MimeLoaded: boolean read FMimeLoaded;
     function ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
+    function FindFileForURI(const URI:string; var FN:String):Boolean;
 
   public
     procedure HandleRequest(var ARequest: TFPHTTPConnectionRequest;
@@ -80,6 +81,52 @@ var
     begin
       MimeTypes.LoadFromFile(MimeTypesFile);
       FMimeLoaded := True;
+    end;
+  end;
+
+  // Find file for the specified URI, by first looking in the 
+  // _zip dir and then in the server base directory.
+  function TTwexeHTTPServer.FindFileForURI(const URI:string; var FN:String):Boolean;
+  Var 
+    OK:Boolean;
+    CleanURI:String;
+  begin
+    OK:=False;
+    CleanURI := URI;
+    if (length(URI) > 0) and (URI[1] = '/') then
+      Delete(CleanURI, 1, 1);
+    DoDirSeparators(CleanURI);
+
+    //If the file is found in the zip directory return that
+    // otherwise see if the file is in the server Base directory
+    if FileNameNoExt(CleanURI) = GetEXEName() then
+    begin
+      FN := GetUnZipPath() + ChangeFileExt(CleanURI,'.html');
+      if FileExists(FN) then
+      begin
+        Result:=True;
+        Exit; //It is the wiki file
+      end;
+    end;
+
+    begin
+      //Try unzip storage area
+      FN := GetUnZipPath() + CleanURI;
+      if FileExists(FN) then
+      begin
+        Result := True;
+        Exit; // It is in Zip directory
+      end;
+
+      //Try BaseDir of server
+      FN := BaseDir + CleanURI;
+      if FileExists(FN) then
+      begin
+        Result := True;
+        Exit; // It is in base dir of Server
+      end
+      else
+        Result := False; // Not found anywhere
     end;
   end;
 
@@ -198,20 +245,7 @@ var
     FN: string;
 
   begin
-    FN := ARequest.Url;
-    if (length(FN) > 0) and (FN[1] = '/') then
-      Delete(FN, 1, 1);
-    DoDirSeparators(FN);
-
-    //If the request is for the wiki, serve from the unzipped file
-    //Otherwise server from the server base directory
-    if FileNameNoExt(FN) = GetEXEName() then
-       FN := GetUnZipPath() + ChangeFileExt(FN,'.html')
-    else
-       FN := BaseDir + FN;
- 
-    //Now serve the file to the client
-    if FileExists(FN) then
+    if FindFileForURI(ARequest.Url,FN) then
     begin
       F := TFileStream.Create(FN, fmOpenRead);
       try
