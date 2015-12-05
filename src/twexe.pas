@@ -186,6 +186,9 @@ var
 
     //Send response
     AResponse.SendContent;
+    
+    //Stop server to executable can restart
+    Self.Active := False;
   end;
 
   procedure TTwexeHTTPServer.HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
@@ -299,7 +302,7 @@ var
   procedure HandleExtractData();
   begin
     try
-      ExtractData();
+      ExtractData(GetEXEFile());
     except
       on E:Exception do
       begin
@@ -329,6 +332,16 @@ var
     end
       else
       Error('Unable to create ''' + OutExeFN + '''');
+  end;
+
+  procedure RestartEXE();
+  Var
+    i:Integer;
+    P:TStrings;
+    Out:String;
+  begin
+    Out := '';
+    RunCmd(GetEXEFile(),Out,True);
   end;
 
 begin
@@ -361,6 +374,9 @@ begin
   //Start HTTP server
   Serv := StartServer();
 
-  //Nothing runs here because server is single-threaded for now
+  //Server is single-threaded, but it stops listening after a
+  // Post request, so we restart the EXE to that everything is
+  // reloaded
   //FIXME: Cleanup temp files: shadow _exes in tmp, unzip dir
+  RestartEXE();
 end.

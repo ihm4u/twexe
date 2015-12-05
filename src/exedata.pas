@@ -23,6 +23,9 @@ type
     class procedure OnOpenZippedStream(UnZipper: TObject; var FZipStream: TStream);
   end;
 
+//Executes command synchronously or asynchronously
+function RunCmd(const Cmd: string; var Output: string; const Async: boolean = False): integer;
+
 //Return complete file name and path of the original executable (not shadow)
 function GetEXEFile():String;
 
@@ -172,7 +175,7 @@ begin
   if IAmShadow() then
     Exit;
 
-  //Copy executable to shadow file and run it
+  //Copy executable to shadow file
   NewExe := GetShadowFile();
   Cmd := NewExe + ' -z "' + ParamStr(0) + '"';
   Log('Creating shadow: '+Cmd);
@@ -237,7 +240,7 @@ end;
 //
 // Extract ZIP file contained in the executable
 //
-procedure ExtractData(ExeFile: string = ''; Delete: boolean = False);
+procedure ExtractData(ExeFile:string; Delete: boolean = False);
 var
   UnZipper: TUnZipper;
   CB: TCallacks;
@@ -247,12 +250,10 @@ begin
   UnZipper := TUnZipper.Create;
   UnZipper.OnOpenInputStream := @CB.OnOpenZippedStream;
   try
-    if ExeFile = '' then
-      ExeFile := ParamStr(0);
     UnZipper.FileName := ExeFile;
     UnZipper.OutputPath := GetUnZipPath();
     UnZipper.UnZipAllFiles;
-    Log('Extracted data in ' + UnZipper.OutputPath);
+    Log('Extracted data in ' + UnZipper.OutputPath + ' from ' + ExeFile);
   finally
     FreeAndNil(CB);
     if Assigned(UnZipper) then
