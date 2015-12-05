@@ -12,6 +12,7 @@ uses
 
   function MakeDirs(Dirs: string): boolean;
   function CopyFile(FromName: string; ToName: string; Delete: boolean = False): boolean;
+  function MoveFile(FromName: string; ToName: string): boolean;
   function MakeBackup(FromName: string; ToName: string): boolean;
   function FindZipHdr(const FileName:string; const StartAt:Int64=0):Int64;
   function FindZipHdr(Stream:TStream; const StartAt:Int64=0):Int64;
@@ -31,8 +32,10 @@ implementation
 
     //Exit if directory is already there
     if DirectoryExists(Dirs) then
+    begin
+      Result:=True;
       Exit;
-
+    end;
     //Exit if Dirs is not ended with the directory separator
     if (Length(Dirs) = 0) or (Dirs[Length(Dirs)] <> DirectorySeparator) then
       Exit;
@@ -50,7 +53,11 @@ implementation
       //Create each of the needed directories
       OK := True;
       for i := L.Count - 2 downto 0 do
-        OK := OK and CreateDir(L[i]);
+      begin
+        if not DirectoryExists(L[i]) then
+          OK := OK and CreateDir(L[i]);
+      end;
+
       Result := OK;
     except
     end;
@@ -82,6 +89,18 @@ implementation
     //Delete original file if asked
     if Result and Delete then
       DeleteFile(FromName);
+  end;
+
+  function MoveFile(FromName: string; ToName: string): boolean;
+  Var
+    Dir:string;
+    OK:boolean;
+  begin
+    Dir := ExtractFilePath(ToName);
+    OK := MakeDirs(Dir);
+    if OK then
+      OK := RenameFile(FromName,ToName);
+    Result:=OK;
   end;
 
   function MakeBackup(FromName: string; ToName: string): boolean;
@@ -135,7 +154,6 @@ implementation
       ZipPos := Stream.Position;
     end;
 
-    Log('Zip Hdr at Pos: '+IntToStr(ZipPos)+' StrPos: '+IntToStr(Stream.Position));
     Result := ZipPos;
   end;
 end.

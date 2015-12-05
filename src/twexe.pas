@@ -26,8 +26,8 @@ uses
 
 type
 
-  { TTestHTTPServer }
-  TTestHTTPServer = class(TFPHTTPServer)
+  { TTwexeHTTPServer }
+  TTwexeHTTPServer = class(TFPHTTPServer)
   private
     FBaseDir: string;
     FCount: integer;
@@ -58,13 +58,13 @@ type
   end;
 
 var
-  Serv: TTestHTTPServer;
+  Serv: TTwexeHTTPServer;
 
-  { TTestHTTPServer }
+  { TTwexeHTTPServer }
   //
   // Base directory for HTTP Server
   //
-  procedure TTestHTTPServer.SetBaseDir(const AValue: string);
+  procedure TTwexeHTTPServer.SetBaseDir(const AValue: string);
   begin
     if FBaseDir = AValue then
       exit;
@@ -74,7 +74,7 @@ var
   end;
 
   //Make sure mime data is loaded
-  procedure TTestHTTPServer.CheckMimeLoaded;
+  procedure TTwexeHTTPServer.CheckMimeLoaded;
   begin
     if (not MimeLoaded) and (MimeTypesFile <> '') then
     begin
@@ -117,7 +117,7 @@ var
   end;
 
   // Parse upload dir, backup dir, etc from post request
-  function TTestHTTPServer.ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
+  function TTwexeHTTPServer.ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
   var
     SL: TStrings;
     RegExp: string;
@@ -142,24 +142,40 @@ var
     FreeAndNil(SL);
   end;
 
-  procedure TTestHTTPServer.HandlePostReq(var ARequest: TFPHTTPConnectionRequest;
+  procedure TTwexeHTTPServer.HandlePostReq(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
   var
     OK: boolean;
     BakFile: string;
     ExeName: string;
     UserFName: string;
+    PostedFile: string;
   begin
-    OK := False;
-    if ParseUploadPlugin(ARequest) then
+    ExeName := GetEXEName();
+    OK := ParseUploadPlugin(ARequest);
+    PostedFile := ARequest.Files[0].LocalFileName; 
+    FWikiFile:=ConcatPaths([GetStoragePath(),'_pst',ExeName+'.html']);
+    OK := MoveFile(PostedFile,FWikiFile);
+    if OK then
     begin
+      OK := False;
+      //Append received wiki to executable
+      AppendFile(GetEXEFile(),FWikiFile);
+
+      //Make backup in specified Backup Dir
+      BakFile := ConcatPaths([FBackupDir, ExeName + '.html']);
+      OK := MakeBackup(FWikiFile, BakFile);
+
+      { **************************************************************************
+        **  This code may be used later to move file to upload dir, but for now we 
+        ** don't need it 
       //Move file to Uploaddir
       UserFName := FileNameNoExt(FUserFile);
-      ExeName := GetEXEName();
       if ( UserFName <> EXEName ) then
          Log('User file "'+UserFName+'" is different from executable name, ignoring.');
       FWikiFile := ConcatPaths([FUploadDir, ExeName])+'.html';
       OK := CopyFile(ARequest.Files[0].LocalFileName, FWikiFile, True);
+       ***************************************************************************}
     end;
     
     //Send 200 OK to the browser if we were able to save the file
@@ -168,16 +184,11 @@ var
     else
       AResponse.Code := 404;
 
+    //Send response
     AResponse.SendContent;
-
-    //Make backup in specified Backup Dir
-    BakFile := ConcatPaths([FBackupDir, ExeName + '.html']);
-    MakeBackup(FWikiFile, BakFile);
-
-    //FIXME: Append file to executable
   end;
 
-  procedure TTestHTTPServer.HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
+  procedure TTwexeHTTPServer.HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
   var
     F: TFileStream;
@@ -223,7 +234,7 @@ var
   end;
 
 
-  procedure TTestHTTPServer.HandleRequest(var ARequest: TFPHTTPConnectionRequest;
+  procedure TTwexeHTTPServer.HandleRequest(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
   begin
     Log(LineEnding + 'Method: ' + ARequest.Method);
@@ -240,11 +251,11 @@ var
     end;
   end;
 
-  function TryPort(Port: word): TTestHTTPServer;
+  function TryPort(Port: word): TTwexeHTTPServer;
   var
-    Serv: TTestHTTPServer;
+    Serv: TTwexeHTTPServer;
   begin
-    Serv := TTestHTTPServer.Create(nil);
+    Serv := TTwexeHTTPServer.Create(nil);
     try
       Serv.BaseDir := GetServerDocPath();
       {$ifdef unix}
@@ -264,7 +275,7 @@ var
     Result := Serv;
   end;
 
-  function StartServer(): TTestHTTPServer;
+  function StartServer(): TTwexeHTTPServer;
   var
     Port: word;
   begin
@@ -315,7 +326,6 @@ var
       AppendFile(OutExeFN,DataFile);
       Msg('Congratulations! '''+ ExtractFileName(DataFile) 
               + ''' has been converted to ''' + OutExeFN + '''.');
-      SetExecutePermission(OutExeFN);
     end
       else
       Error('Unable to create ''' + OutExeFN + '''');
@@ -328,7 +338,7 @@ begin
   //Print version info and header
   If not IAmShadow() then
     PrintHeader();
-
+  
   //If a parameter is specified convert the file to an executable
   //in the same directory
   if (ParamStr(1) <> '-z')  and (ParamStr(1) <> '') then
@@ -352,4 +362,5 @@ begin
   Serv := StartServer();
 
   //Nothing runs here because server is single-threaded for now
+  //FIXME: Cleanup temp files: shadow _exes in tmp, unzip dir
 end.

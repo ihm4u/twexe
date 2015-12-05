@@ -47,10 +47,20 @@ function RunShadow():Boolean;
 //Returns True if the currently running process is a shadow
 function IAmShadow():Boolean;
 
+function GetStoragePath():string;
 function GetUnZipPath():string;
 function GetServerDocPath():string;
+function GetShadowFile():string;
 
 implementation
+
+//
+// Get shadow executable file name and path
+//
+function GetShadowFile():String;
+begin
+  Result:=ConcatPaths([GetStoragePath(),'_exe','_' + GetEXEName()]);
+end;
 
 //
 // Get executable name, without extension, if any.
@@ -163,15 +173,15 @@ begin
     Exit;
 
   //Copy executable to shadow file and run it
-  NewExe := GetTempDir() + '_' + GetEXEName();
+  NewExe := GetShadowFile();
   Cmd := NewExe + ' -z "' + ParamStr(0) + '"';
   Log('Creating shadow: '+Cmd);
   try
     OK:=CopyFile( ParamStr(0), NewExe );
   except
-    on EAccessViolation do
+    on E:EAccessViolation do
       begin
-        Error(''''+ GetEXEName + ''' is already running.');
+        Error(''''+ GetEXEName + ''' is already running: ' + E.Message);
         Halt(3);
       end;
     on E: EFCreateError do
@@ -320,11 +330,20 @@ begin
   FreeAndNil(ZFS);
 
   //Delete temporary zip file
+  DeleteFile(ZFN);
+
+  //Set executable bit on exe
+  SetExecutePermission(ExeFile);
+end;
+
+function GetStoragePath():string;
+begin
+   Result:= ConcatPaths([GetTempDir(),GetEXEName()+'.twx']) + DirectorySeparator;
 end;
 
 function GetUnZipPath():string;
 begin
-   Result:= GetTempDir() + GetEXEName() + DirectorySeparator;
+   Result:= GetStoragePath() + '_zip' + DirectorySeparator;
 end;
 
 function GetServerDocPath():string;
