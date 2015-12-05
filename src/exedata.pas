@@ -246,6 +246,14 @@ var
   CB: TCallacks;
 
 begin
+  //Error if ExeFile does not exist
+  If not FileExists(ExeFile) then
+  begin
+    Error('Executable file ''' + ExeFile + ''' not found.');
+    Exit;
+  end;
+
+  //Extract zipped data from file
   CB := TCallacks.Create;
   UnZipper := TUnZipper.Create;
   UnZipper.OnOpenInputStream := @CB.OnOpenZippedStream;
