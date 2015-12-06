@@ -16,7 +16,7 @@ uses
   httpdefs,
   regexpr,
   
-  exedata,logger,fileops,version
+  exedata,logger,fileops,wikiops,textops,version
   {$ifdef unix}
   ,unixlib
   {$endif}
@@ -39,6 +39,7 @@ type
     FUserFile: string;
     FPassword: string;
     FUploadDir: string;
+    FSavingConfigUpdated:boolean;
     procedure SetBaseDir(const AValue: string);
     procedure HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
@@ -56,10 +57,8 @@ type
       var AResponse: TFPHTTPConnectionResponse); override;
     property BaseDir: string read FBaseDir write SetBaseDir;
     property MimeTypesFile: string read FMimeTypesFile write FMimeTypesFile;
+    property SavingConfigUpated: boolean read FSavingConfigUpdated write FSavingConfigUpdated;
   end;
-
-var
-  Serv: TTwexeHTTPServer;
 
   { TTwexeHTTPServer }
   //
@@ -88,10 +87,9 @@ var
   // _zip dir and then in the server base directory.
   function TTwexeHTTPServer.FindFileForURI(const URI:string; var FN:String):Boolean;
   Var 
-    OK:Boolean;
     CleanURI:String;
+    TmpWikiFN: String;
   begin
-    OK:=False;
     CleanURI := URI;
     if (length(URI) > 0) and (URI[1] = '/') then
       Delete(CleanURI, 1, 1);
@@ -101,10 +99,26 @@ var
     // otherwise see if the file is in the server Base directory
     if FileNameNoExt(CleanURI) = GetEXEName() then
     begin
-      FN := GetUnZipPath() + ChangeFileExt(CleanURI,'.html');
+      FN := GetUnzippedWikiFile();
+      WriteLn('FN=',FN);
       if FileExists(FN) then
       begin
         Result:=True;
+        //Update saving config if it hasnt been done
+        If not SavingConfigUpated then
+        begin
+          //Make sure the saving tab in the control panel is pointing 
+          //to the twexe server
+          try
+            TmpWikiFN:=ExtractFilePath(FN)+'_orig_'+ExtractFileName(FN);
+            MoveFile(FN,TmpWikiFN);
+            SavingConfigUpated:=EnsureTwexeSavingConfig(TmpWikiFN,FN,Port);
+            DeleteFile(TmpWikiFN);
+          except on E:Exception do
+            Error('Unable to update saving configuration for '''+ FN + ''': '+ E.Message);
+          end;
+        end;
+          
         Exit; //It is the wiki file
       end;
     end;
@@ -127,39 +141,6 @@ var
       end
       else
         Result := False; // Not found anywhere
-    end;
-  end;
-
-  //Return group matches from a regex
-  function MatchRegex(const RegExpr: string; const Text: string;
-  var Matches: TStrings): boolean;
-  var
-    Regex: TRegExpr;
-    i: integer;
-  begin
-    Regex := TRegExpr.Create;
-    try
-      with Regex do
-      begin
-        Expression := RegExpr;
-        //We have a match
-        if Exec(Text) then
-        begin
-          //Add all matches
-          repeat
-            begin
-              for i := 1 to SubExprMatchCount do
-                Matches.Add(Match[i]);
-            end
-          until not ExecNext;
-          Result := True;
-        end
-        else
-          Result := False;
-      end;
-    finally
-      if Assigned(Regex) then
-        FreeAndNil(Regex);
     end;
   end;
 
@@ -195,7 +176,6 @@ var
     OK: boolean;
     BakFile: string;
     ExeName: string;
-    UserFName: string;
     PostedFile: string;
   begin
     ExeName := GetEXEName();
@@ -362,7 +342,7 @@ var
     begin
       AppendFile(OutExeFN,DataFile);
       Msg('Congratulations! '''+ ExtractFileName(DataFile) 
-              + ''' has been converted to ''' + OutExeFN + '''.');
+              + ''' has been converted to a twixie named ''' + OutExeFN + '''.');
     end
       else
       Error('Unable to create ''' + OutExeFN + '''');
@@ -370,8 +350,6 @@ var
 
   procedure RestartEXE();
   Var
-    i:Integer;
-    P:TStrings;
     Out:String;
   begin
     Out := '';
@@ -406,7 +384,7 @@ begin
   HandleExtractData();
 
   //Start HTTP server
-  Serv := StartServer();
+  StartServer();
 
   //Server is single-threaded, but it stops listening after a
   // Post request, so we restart the EXE to that everything is

@@ -158,6 +158,18 @@ begin
   end;
 end;
 
+// Make a shadow of the current executable
+// A shadow is a copy of the executing code of the
+// specified executable without including the appended data
+function MakeShadow(ExeFN: string; ShadowFN: string):Boolean;
+Var
+  ZipPos: LongInt;
+begin
+  ZipPos:=FindZipHdr(ExeFN);
+  //If ZipPos is -1 it will copy the whole file
+  Result:=CopyFile( ExeFN, ShadowFN, False, ZipPos);
+end;
+
 //
 // Run copy of executable to allow writing over the original executable
 // The caller is responsible for exiting

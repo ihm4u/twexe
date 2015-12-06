@@ -11,7 +11,8 @@ uses
   logger;
 
   function MakeDirs(Dirs: string): boolean;
-  function CopyFile(FromName: string; ToName: string; Delete: boolean = False): boolean;
+  function CopyFile(FromName: string; ToName: string; 
+    Delete: boolean = False; const Count:LongInt=-1): boolean;
   function MoveFile(FromName: string; ToName: string): boolean;
   function MakeBackup(FromName: string; ToName: string): boolean;
   function FindZipHdr(const FileName:string; const StartAt:Int64=0):Int64;
@@ -63,12 +64,15 @@ implementation
     end;
   end;
 
-  function CopyFile(FromName: string; ToName: string; Delete: boolean = False): boolean;
+  function CopyFile(FromName: string; ToName: string; 
+    Delete: boolean = False; const Count:LongInt=-1): boolean;
   var
     SourceF, DestF: TFileStream;
+    _Count:LongInt;
   begin
     //Return failed copy by default
     Result := False;
+    _Count := Count;
     if FromName = ToName then
       Exit;
     try
@@ -76,7 +80,9 @@ implementation
       Log('Copying ''' + FromName + ''' to ''' + ToName + '''');
       SourceF := TFileStream.Create(FromName, fmOpenRead);
       DestF := TFileStream.Create(ToName, fmCreate);
-      DestF.CopyFrom(SourceF, SourceF.Size);
+      If _Count = -1 then
+        _Count := SourceF.Size;
+      DestF.CopyFrom(SourceF, _Count);
       //Now the copy succeded
       Result := True;
     except
