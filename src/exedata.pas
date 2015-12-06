@@ -192,7 +192,7 @@ begin
   Cmd := NewExe + ' -z "' + ParamStr(0) + '"';
   Log('Creating shadow: '+Cmd);
   try
-    OK:=CopyFile( ParamStr(0), NewExe );
+    OK:=MakeShadow( ParamStr(0), NewExe );
   except
     on E:EAccessViolation do
       begin
@@ -226,7 +226,7 @@ var
   MemStr: TMemoryStream;
   ZipPos: int64;
 begin
-  FZipStream := TFileStream.Create(ParamStr(0), fmOpenRead or fmShareDenyWrite);
+  FZipStream := TFileStream.Create(GetEXEFile(), fmOpenRead or fmShareDenyWrite);
   //Jump to position 1000000 to make the search faster, since we
   //know the executable size is larger than 1000000. Note that this number
   //must be divisible by 4, otherwise the ReadDWord will be off-base
