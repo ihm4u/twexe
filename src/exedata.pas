@@ -182,7 +182,7 @@ Var
   Cmd:string;
 begin
   Out:='';
-  //Exit if we're already running in a shadow
+  //Exit if we are already running in a shadow
   Result:=False;
   if IAmShadow() then
     Exit;

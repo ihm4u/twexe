@@ -1,0 +1,11 @@
+1. Open (twixie) file
+   -Should serve the wiki on a local port
+   -Should open browser with the wiki loaded
+   -Should close when browser is closed?
+2. Convert TW5 file to Twixie executable
+   -Produce a twixie executable from any TW5 file
+3. Click save button in wiki (or automatic save)
+   -Should save wiki in twixie file and return success or failure
+   -Should save backups in specified backup dir in saving tab of CPanel
+4. Rename twixie executable
+   -Should not break anything

@@ -23,7 +23,59 @@ uses
   function EnsureTwexeSavingConfig(const WikiFile: string; const OutFile: string; 
     const Port:Integer): boolean;
 
+  function FindWikiFile(const Dir: string; var WikiName: string):boolean;
+  function IsWikiFile(const FileName: string):boolean;
+  
 implementation
+
+  //Returns true if file is a TiddlyWiki; false otherwise
+  function IsWikiFile(const FileName: string):boolean;
+  Const
+     Regex = '<!--~~ This is a Tiddlywiki file.';
+  Var
+     WikiS: TStream;
+     Buffer: string;
+  begin
+    Result := False;
+    SetLength(Buffer,5120);
+    try
+      WikiS := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+      WikiS.Read(Buffer[1],5120);
+		Result:= ExecRegExpr(Regex,Buffer);
+    except
+      //This is so we catch any exceptions and Result stays false
+    end;
+
+    if Assigned(WikiS) then
+      FreeAndNil(WikiS);
+  end;
+   
+  //Return firt Wiki file found in Directory 'Dir'
+  function FindWikiFile(const Dir: string; var WikiName:string):boolean;
+  var 
+    Info : TSearchRec;
+    Path: string;
+    FullName: string;
+    IsWiki: boolean;
+  begin
+    Result:=False;
+    WikiName := '';
+    Path := ConcatPaths([Dir,'*']);
+	 If FindFirst(Path,faAnyFile,Info)=0 then
+	 begin
+		Repeat
+         FullName := ConcatPaths([Dir,Info.Name]);
+         IsWiki := IsWikiFile(FullName);
+		Until (FindNext(info)<>0) or IsWiki;
+      If IsWiki then
+      begin
+        Log('Found wikifile: '+Info.Name);
+        WikiName:=FullName;
+        Result:=True;
+      end;
+	 end;
+	 FindClose(Info);
+  end;
 
   //Returns full path  of wiki file in unzipped directory
   function GetUnzippedWikiFile():string;

@@ -97,7 +97,7 @@ type
 
     //If the file is found in the zip directory return that
     // otherwise see if the file is in the server Base directory
-    if FileNameNoExt(CleanURI) = GetEXEName() then
+    if (FileNameNoExt(CleanURI) = GetEXEName()) or (CleanURI='') then
     begin
       FN := GetUnzippedWikiFile();
       WriteLn('FN=',FN);
@@ -314,9 +314,20 @@ type
 
   //Extract data or abort
   procedure HandleExtractData();
+  Var
+    WikiName: string;
+    NewName: string;
   begin
     try
       ExtractData(GetEXEFile());
+      //Make sure unzipped wiki file has the same name as the twixie
+      FindWikiFile(GetUnZipPath(),WikiName);
+      NewName := GetUnZipPath() + GetEXEName() + '.html';
+      if WikiName <> NewName then
+      begin
+        Log('Renaming '''+WikiName+''' to '''+NewName+'''.');
+        MoveFile(WikiName,NewName);
+      end;
     except
       on E:Exception do
       begin
