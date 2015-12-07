@@ -1,12 +1,16 @@
-program twexe;
+unit twexehttpserver;
 
 {$mode objfpc}{$H+}
+
 {$define UseCThreads}
 
-uses 
-  {$IFDEF UNIX} 
+interface
+
+uses
+  { System/Free pascal units }
+  {$IFDEF UNIX}
   {$IFDEF UseCThreads}
-  cthreads, 
+  cthreads,
   {$ENDIF}
   {$ENDIF}
   SysUtils,
@@ -15,14 +19,10 @@ uses
   fpmimetypes,
   httpdefs,
   regexpr,
-  
-  exedata,logger,fileops,wikiops,textops,version
-  {$ifdef unix}
-  ,unixlib
-  {$endif}
-  {$ifdef windows}
-  ,windowslib
-  {$endif};
+  lclintf,
+
+  { Twexe units }
+  exedata,logger,fileops,wikiops,textops;
 
 type
 
@@ -39,7 +39,9 @@ type
     FUserFile: string;
     FPassword: string;
     FUploadDir: string;
+    FURL: string;
     FSavingConfigUpdated:boolean;
+    FOpenBrowser: boolean;
     procedure SetBaseDir(const AValue: string);
     procedure HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
@@ -51,16 +53,74 @@ type
     property MimeLoaded: boolean read FMimeLoaded;
     function ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
     function FindFileForURI(const URI:string; var FN:String):Boolean;
+    procedure StartServerSocket; override;
+    procedure HandleOnStartListening;
 
   public
+    class function ReadLastURL():string;
     procedure HandleRequest(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse); override;
+
     property BaseDir: string read FBaseDir write SetBaseDir;
     property MimeTypesFile: string read FMimeTypesFile write FMimeTypesFile;
-    property SavingConfigUpated: boolean read FSavingConfigUpdated write FSavingConfigUpdated;
+    property SavingConfigUpdated: boolean read FSavingConfigUpdated write FSavingConfigUpdated;
+    property URL: string read FURL write FURL;
+    property OpenBrowser: boolean read FOpenBrowser write FOpenBrowser;
+
   end;
 
+  implementation
+
   { TTwexeHTTPServer }
+
+  class function TTwexeHTTPServer.ReadLastURL():string;
+  Var
+    UFile : Text;
+    LURL: string;
+  begin
+   Result:='';
+   try
+     System.Assign(UFile, ConcatPaths([GetTempDir(False),GetEXEName()+'_lasturl']));
+     Reset(UFile);
+     Readln(UFile,LURL);
+     Close(UFile);
+     Result:=LURL;
+   except
+   end;
+  end;
+
+  procedure StoreLastURL(const URL:string);
+  Var UFile : Text;
+  begin
+   Assign(UFile, ConcatPaths([GetTempDir(False),GetEXEName()+'_lasturl']));
+   ReWrite(UFile);
+   Writeln(UFile,URL);
+   Close(UFile);
+  end;
+
+
+  procedure TTwexeHttpServer.StartServerSocket;
+  begin
+    InetServer.Bind;
+    InetServer.Listen;
+    HandleOnStartListening;
+    InetServer.StartAccepting;
+  end;
+
+  procedure TTwexeHTTPServer.HandleOnStartListening;
+  begin
+    If Self.Address = '' then
+      Self.URL := 'http://127.0.0.1:' + IntToStr(Self.Port)
+    else
+      Self.URL := 'http://' + Self.Address + ':' + IntToStr(Self.Port);
+
+    Msg(LineEnding + 'Serving on ' + Self.URL);
+    StoreLastURL(Self.URL);
+
+    If (FOpenBrowser) then
+      OpenURL(Self.URL);
+  end;
+
   //
   // Base directory for HTTP Server
   //
@@ -83,10 +143,10 @@ type
     end;
   end;
 
-  // Find file for the specified URI, by first looking in the 
+  // Find file for the specified URI, by first looking in the
   // _zip dir and then in the server base directory.
   function TTwexeHTTPServer.FindFileForURI(const URI:string; var FN:String):Boolean;
-  Var 
+  Var
     CleanURI:String;
     TmpWikiFN: String;
   begin
@@ -105,20 +165,21 @@ type
       begin
         Result:=True;
         //Update saving config if it hasnt been done
-        If not SavingConfigUpated then
+        If not SavingConfigUpdated then
         begin
-          //Make sure the saving tab in the control panel is pointing 
+          //Make sure the saving tab in the control panel is pointing
           //to the twexe server
           try
             TmpWikiFN:=ExtractFilePath(FN)+'_orig_'+ExtractFileName(FN);
             MoveFile(FN,TmpWikiFN);
-            SavingConfigUpated:=EnsureTwexeSavingConfig(TmpWikiFN,FN,Port);
+            //FIXME: This should update saving config only if twexe is found
+            SavingConfigUpdated:=EnsureTwexeSavingConfig(TmpWikiFN,FN,Port);
             DeleteFile(TmpWikiFN);
           except on E:Exception do
             Error('Unable to update saving configuration for '''+ FN + ''': '+ E.Message);
           end;
         end;
-          
+
         Exit; //It is the wiki file
       end;
     end;
@@ -180,7 +241,7 @@ type
   begin
     ExeName := GetEXEName();
     OK := ParseUploadPlugin(ARequest);
-    PostedFile := ARequest.Files[0].LocalFileName; 
+    PostedFile := ARequest.Files[0].LocalFileName;
     FWikiFile:=ConcatPaths([GetStoragePath(),'_pst',ExeName+'.html']);
     OK := MoveFile(PostedFile,FWikiFile);
     if OK then
@@ -194,8 +255,8 @@ type
       OK := MakeBackup(FWikiFile, BakFile);
 
       { **************************************************************************
-        **  This code may be used later to move file to upload dir, but for now we 
-        ** don't need it 
+        **  This code may be used later to move file to upload dir, but for now we
+        ** don't need it
       //Move file to Uploaddir
       UserFName := FileNameNoExt(FUserFile);
       if ( UserFName <> EXEName ) then
@@ -204,7 +265,7 @@ type
       OK := CopyFile(ARequest.Files[0].LocalFileName, FWikiFile, True);
        ***************************************************************************}
     end;
-    
+
     //Send 200 OK to the browser if we were able to save the file
     if OK then
       AResponse.Code := 200
@@ -213,7 +274,7 @@ type
 
     //Send response
     AResponse.SendContent;
-    
+
     //Stop server to executable can restart
     Self.Active := False;
   end;
@@ -225,6 +286,7 @@ type
     FN: string;
 
   begin
+    FN:='';
     if FindFileForURI(ARequest.Url,FN) then
     begin
       F := TFileStream.Create(FN, fmOpenRead);
@@ -239,7 +301,7 @@ type
         AResponse.SendContent;
         AResponse.ContentStream := nil;
       finally
-        F.Free;
+        FreeAndNil(F);
       end;
     end
     else
@@ -268,138 +330,5 @@ type
     end;
   end;
 
-  function TryPort(Port: word): TTwexeHTTPServer;
-  var
-    Serv: TTwexeHTTPServer;
-  begin
-    Serv := TTwexeHTTPServer.Create(nil);
-    try
-      Serv.BaseDir := GetServerDocPath();
-      {$ifdef unix}
-      Serv.MimeTypesFile := '/etc/mime.types';
-      {$endif}
-      Serv.Threaded := False;
-      Serv.Port := Port;
-      Msg('Serving on http://127.0.0.1:' + IntToStr(Serv.Port),False);
-      Serv.Active := True;
-    except
-      On Exception do
-      begin
-        Msg('...Busy');
-        FreeAndNil(Serv);
-      end;
-    end;
-    Result := Serv;
-  end;
-
-  function StartServer(): TTwexeHTTPServer;
-  var
-    Port: word;
-  begin
-    Port := 8080;
-    repeat
-      Result := TryPort(Port);
-      if Result = nil then
-        Inc(Port);
-    until (Result <> nil) or (Port > 8095);
-  end;
-
-  procedure PrintHeader();
-  begin
-    Msg('▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁');
-    Msg('⚜ Single File TiddlyWiki executable ⚜');
-    Msg('▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔');
-    Msg('Version: '+_VERSION);
-  end;
-
-  //Extract data or abort
-  procedure HandleExtractData();
-  Var
-    WikiName: string;
-    NewName: string;
-  begin
-    try
-      ExtractData(GetEXEFile());
-      //Make sure unzipped wiki file has the same name as the twixie
-      FindWikiFile(GetUnZipPath(),WikiName);
-      NewName := GetUnZipPath() + GetEXEName() + '.html';
-      if WikiName <> NewName then
-      begin
-        Log('Renaming '''+WikiName+''' to '''+NewName+'''.');
-        MoveFile(WikiName,NewName);
-      end;
-    except
-      on E:Exception do
-      begin
-        Error('Error extracting data: '+E.Message);
-        Error('Aborting.');
-        Halt(2);
-      end;
-    end;
-  end;
-
-  procedure ConvertWikiToExe(DataFile:string);
-  Var
-    OK:Boolean;
-    OutExeFN:String;
-    Ext:string;
-  begin
-    Ext := GetOSEXEExt();
-    OutExeFN := FileNameNoExt(DataFile) + Ext;
-    Msg('Generating ''' + OutExeFN + '''...');
-    OK:=CopyFile(GetEXEFile(),OutExeFN);
-    
-    if (OK) then
-    begin
-      AppendFile(OutExeFN,DataFile);
-      Msg('Congratulations! '''+ ExtractFileName(DataFile) 
-              + ''' has been converted to a twixie named ''' + OutExeFN + '''.');
-    end
-      else
-      Error('Unable to create ''' + OutExeFN + '''');
-  end;
-
-  procedure RestartEXE();
-  Var
-    Out:String;
-  begin
-    Out := '';
-    RunCmd(GetEXEFile(),Out,True);
-  end;
-
-begin
-  LogVerbose := True;
-  LogDebug := 0;
-
-  //Print version info and header
-  If not IAmShadow() then
-    PrintHeader();
-  
-  //If a parameter is specified convert the file to an executable
-  //in the same directory
-  if (ParamStr(1) <> '-z')  and (ParamStr(1) <> '') then
-  begin
-    ConvertWikiToExe(ParamStr(1));
-    Exit;
-  end;
-
-  //Run shadow and exit,
-  //continue if we're not the shadow
-  if RunShadow() then
-  begin
-     Log('Exiting, shadow created and running.');
-     Exit;
-  end;
-
-  //Extract data bundled in executable
-  HandleExtractData();
-
-  //Start HTTP server
-  StartServer();
-
-  //Server is single-threaded, but it stops listening after a
-  // Post request, so we restart the EXE to that everything is
-  // reloaded
-  //FIXME: Cleanup temp files: shadow _exes in tmp, unzip dir
-  RestartEXE();
 end.
+

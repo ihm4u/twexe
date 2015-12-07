@@ -155,6 +155,8 @@ Type
     procedure HandleRequestError(Sender: TObject; E: Exception); virtual;
     // Connection count
     Property ConnectionCount : Integer Read FConnectionCount;
+    Property InetServer:TInetServer Read FServer;
+
   public
     Constructor Create(AOwner : TComponent); override;
     Destructor Destroy; override;

@@ -23,6 +23,9 @@ type
     class procedure OnOpenZippedStream(UnZipper: TObject; var FZipStream: TStream);
   end;
 
+Var
+  OriginalExeFile: string;
+
 //Executes command synchronously or asynchronously
 function RunCmd(const Cmd: string; var Output: string; const Async: boolean = False): integer;
 
@@ -45,7 +48,7 @@ function GetEXEPath():String;
 function FileNameNoExt(Name:String):String;
 
 //Run a shadow executable of the current one
-function RunShadow():Boolean;
+function RunShadow(const OpenBrowser:boolean):Boolean;
 
 //Returns True if the currently running process is a shadow
 function IAmShadow():Boolean;
@@ -71,7 +74,7 @@ end;
 function GetEXEFile():String;
 begin
   If IAmShadow() then
-    Result:=ParamStr(2)
+    Result:=OriginalExeFile
   else 
     Result:=ParamStr(0);
 end;
@@ -101,12 +104,7 @@ function GetEXEPath():String;
 Var
    Exe:string;
 begin
-   Exe:=ParamStr(0);
-   
-   if IAmShadow() then
-      Exe:=ParamStr(2)
-   else
-      Result:=ExtractFilePath(Exe);
+   Result:=ExtractFilePath(GetEXEFile());
 end;
 
 function IAmShadow():Boolean;
@@ -174,35 +172,46 @@ end;
 // Run copy of executable to allow writing over the original executable
 // The caller is responsible for exiting
 //
-function RunShadow():Boolean;
+function RunShadow(const OpenBrowser:boolean):Boolean;
 Var
   OK:Boolean;
   NewExe:string;
   Out:string;
   Cmd:string;
+  Opts: string;
 begin
   Out:='';
-  //Exit if we are already running in a shadow
   Result:=False;
+
+  //Exit if we are already running in a shadow
   if IAmShadow() then
     Exit;
 
+  //Propagate flag to not open the browser
+  If OpenBrowser then
+    Opts:=''
+  else
+    Opts:=' -n';
+
   //Copy executable to shadow file
   NewExe := GetShadowFile();
-  Cmd := NewExe + ' -z "' + ParamStr(0) + '"';
+  Cmd := NewExe + ' -z "' + ParamStr(0) + '"' + Opts;
   Log('Creating shadow: '+Cmd);
   try
+    //Copy executable section of exe to shadow file
     OK:=MakeShadow( ParamStr(0), NewExe );
   except
     on E:EAccessViolation do
       begin
         Error(''''+ GetEXEName + ''' is already running: ' + E.Message);
-        Halt(3);
+        ExitCode := 3;
+        Raise;
       end;
     on E: EFCreateError do
       begin
         Error('Unable to create '''+ NewExe + ''': ' + E.Message);
-        Halt(4);
+        ExitCode := 4;
+        Raise;
       end;
   end;
   
@@ -213,7 +222,7 @@ begin
     OK:= RunCmd(Cmd,Out,True) <> -1;
   end
   else
-    Error('Unable to copy "' + ParamStr(0) + '"executable to create shadow: '+NewExe);
+    Error('Unable to copy ''' + ParamStr(0) + ''' executable to create shadow: '+NewExe);
   Result:=OK;
 end;
 
@@ -309,6 +318,7 @@ begin
       ZipFiles(TmpFile, S);
     finally
       Free;
+      S.Free;
     end;
   end;
 

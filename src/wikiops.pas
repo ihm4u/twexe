@@ -37,6 +37,9 @@ implementation
      Buffer: string;
   begin
     Result := False;
+    If not FileExists(FileName) then
+      Exit;
+
     SetLength(Buffer,5120);
     try
       WikiS := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);

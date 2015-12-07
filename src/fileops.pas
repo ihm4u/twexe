@@ -62,6 +62,7 @@ implementation
       Result := OK;
     except
     end;
+    FreeAndNil(L);
   end;
 
   function CopyFile(FromName: string; ToName: string; 
