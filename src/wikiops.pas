@@ -94,6 +94,13 @@ implementation
     // because the caller will deal with it
   end;
 
+  procedure ReplaceWantPassword(var S:string);
+  Const
+    Regex = '(?s)(\$:\/core\/modules\/savers\/upload\.js&quot;: {.*?if)(\(!username \|\| username\.toString\(\)\.trim\(\) === \\&quot;\\&quot; \|\| !password \|\| password\.toString\(\)\.trim\(\) === \\&quot;\\&quot;\))';
+  begin
+    S := ReplaceRegExpr(Regex,S,'$1((username!==\\&quot;twexe\\&quot;) && $2)',True);
+  end;
+
   //Return true if 'twexe' is found in the wiki name of 
   //the saving tab of the control panel of the wikile
   function HasTwexeUploadName(const SBuffer:string):boolean;
@@ -174,6 +181,7 @@ implementation
      UNTitle='title="$:/UploadName"';
      UURLTitle='title="$:/UploadURL"';
      LibModule='id="libraryModules"';
+     PasswordChk='UploadPlugin';
   Var
     PortStr: string;
 
@@ -184,12 +192,14 @@ implementation
     If (Pos(UNTitle,S)<>0)  //We may have an uploadName tiddler
        or (Pos(UURLTitle,S)<>0) //We may have an uploadURL tiddler
        or (Pos(LibModule,S)<>0) //We may need to add the config
+       or (Pos(PasswordChk,S)<>0) //We have the section for password check
        then
     begin
       //Go ahead and do all the regex checking 
       //if woAlways was specified
       if When = woAlways then
       begin
+        ReplaceWantPassword(S);
         ReplaceUploadName(S,When);
         ReplaceUploadURL(S,PortStr,When);
         MaybeAddSavingConfig(S,PortStr,When);
@@ -200,6 +210,7 @@ implementation
         //uploadName tiddler and the caller specified woIfTwexe
         If (When = woIfTwexe) and HasTwexeUploadName(S) then
         begin
+          ReplaceWantPassword(S);
           ReplaceUploadName(S,When);
           ReplaceUploadURL(S,PortStr,When);
           MaybeAddSavingConfig(S,PortStr,When);
@@ -211,7 +222,8 @@ implementation
 
   function UpdateWikiSavingConfig(const WikiFile: string; const OutFile: string; const Port:Integer; When: Integer): boolean;
   Const
-     OVERLAP=500;
+     OVERLAP=3072;
+     BUFSIZE=33792; //33K To honor Our Lord
   var
     WikiS,OutS: TFileStream;
     ReadCount: LongInt;
@@ -222,24 +234,24 @@ implementation
       // 1. Read buffer from input wikifile
       // 2. Update buffer if necessary
       // 3. Write buffer back to output wikifile
-      SetLength(Buffer,4096);
+      SetLength(Buffer,BUFSIZE);
       MakeDirs(OutFile);
       WikiS := TFileStream.Create(WikiFile, fmOpenRead or fmShareDenyWrite);
       OutS := TFileStream.Create(OutFile, fmCreate);
       Log('Updating saving configuration in ''' + OutFile + '''.');
 
-      //We overlap the reading buffers by 500 bytes in order to 
+      //We overlap the reading buffers by OVERLAP bytes in order to 
       //prevent any of the regex matches to fail because of the string
-      //being split at the boundary of two buffers. 500 bytes accomodates
+      //being split at the boundary of two buffers. OVERLAP bytes accomodates
       //enough space for the largest string matching any of the regexes
       //in the replace/add functions
-      ReadCount := WikiS.Read(Buffer[1],4096);
+      ReadCount := WikiS.Read(Buffer[1],BUFSIZE);
       SetLength(Buffer,ReadCount);
       ReplaceOrAddConfig(Buffer,Port,When);
       OutS.Write(Buffer[1],Length(Buffer)*SizeOf(Char));
       repeat
         WikiS.Seek(-OVERLAP,soCurrent);
-        ReadCount := WikiS.Read(Buffer[1],4096);
+        ReadCount := WikiS.Read(Buffer[1],BUFSIZE);
         SetLength(Buffer,ReadCount);
         ReplaceOrAddConfig(Buffer,Port,When);
         OutS.Write(Buffer[OVERLAP+1],Length(Buffer)*SizeOf(Char)-OVERLAP);
