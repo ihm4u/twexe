@@ -90,6 +90,7 @@ implementation
   begin
     try
       WikiName:='';
+      Log('Extracting data from '''+ GetEXEFile() + '''');
       ExtractData(GetEXEFile());
       //Make sure unzipped wiki file has the same name as the twixie
       FindWikiFile(GetUnZipPath(),WikiName);
@@ -103,8 +104,8 @@ implementation
       on E:Exception do
       begin
         Error('Error extracting data: '+E.Message);
-        Error('Aborting.');
-        Halt(2);
+        ExitCode := 2;
+        Raise;
       end;
     end;
   end;
@@ -116,7 +117,7 @@ implementation
     Ext:string;
   begin
     Ext := GetOSEXEExt();
-    OutExeFN := FileNameNoExt(DataFile) + Ext;
+    OutExeFN := ChangeFileExt(ExpandFileName(DataFile),Ext);
     Msg('Generating ''' + OutExeFN + '''...');
     OK:=CopyFile(GetEXEFile(),OutExeFN);
     
@@ -211,6 +212,7 @@ begin
   try
     try
       //Start HTTP server
+      Sleep(200); //Wait a little to give time for previous exe to end
       Serv:=StartServer();
     finally
       If Assigned(Serv) then

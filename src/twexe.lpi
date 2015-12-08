@@ -25,11 +25,11 @@
         <CompilerOptions>
           <Version Value="11"/>
           <Target>
-            <Filename Value="../build/$(TargetCPU)-$(TargetOS)/twexe"/>
+            <Filename Value="c:/temp/build/$(TargetCPU)-$(TargetOS)/twexe"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <UnitOutputDirectory Value="../build/$(TargetCPU)-$(TargetOS)"/>
+            <UnitOutputDirectory Value="c:/temp/build/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
@@ -60,7 +60,6 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <HostApplicationFilename Value="/home/ologgio/bld/twexe/rel/x86_64-linux/empty"/>
       </local>
     </RunParams>
     <RequiredPackages Count="1">

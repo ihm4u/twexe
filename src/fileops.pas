@@ -13,7 +13,7 @@ uses
   function MakeDirs(Dirs: string): boolean;
   function CopyFile(FromName: string; ToName: string; 
     Delete: boolean = False; const Count:LongInt=-1): boolean;
-  function MoveFile(FromName: string; ToName: string): boolean;
+  function MoveFile(FromName: string; ToName: string; const DeleteFirst:boolean=False): boolean;
   function MakeBackup(FromName: string; ToName: string): boolean;
   function FindZipHdr(const FileName:string; const StartAt:Int64=0):Int64;
   function FindZipHdr(Stream:TStream; const StartAt:Int64=0):Int64;
@@ -49,7 +49,7 @@ implementation
       repeat
         D := ExtractFileDir(D);
         L.Add(D);
-      until (D = '') or (D='/');
+      until (D = '') or (AnsiLastChar(D)=DirectorySeparator);
 
       //Create each of the needed directories
       OK := True;
@@ -98,7 +98,7 @@ implementation
       DeleteFile(FromName);
   end;
 
-  function MoveFile(FromName: string; ToName: string): boolean;
+  function MoveFile(FromName: string; ToName: string; const DeleteFirst:boolean=False): boolean;
   Var
     Dir:string;
     OK:boolean;
@@ -106,7 +106,13 @@ implementation
     Dir := ExtractFilePath(ToName);
     OK := MakeDirs(Dir);
     if OK then
+    begin
+      If DeleteFirst and FileExists(ToName) then
+        DeleteFile(ExpandFileName(ToName));
       OK := RenameFile(FromName,ToName);
+    end;
+    If not OK then
+      Error('Unable to move ''' + FromName + ''' to ''' + ToName + '''');
     Result:=OK;
   end;
 
@@ -141,26 +147,46 @@ implementation
 
   function FindZipHdr(Stream:TStream; const StartAt:Int64=0):Int64;
   var
-    W: DWord;
-    ZipPos: Int64;
-  const
+    Buf: string;
+    ZipPos, ReadCount: Int64;
+    Found: boolean;
+    i: Integer;
     //Shift the header signature one bit right because otherwise it
     //can be found in the executable also
-    ZipHDR = $04034b50 shr 1;
+    //Header is 50 4b 03 04 14 00 00 00      for our unzip utility
+    ZipHdr: array[0..7] of byte = ( $50 shl 1,$4b shl 1, $03 shl 1, $04 shl 1,
+                                    $14 shl 1,$00 shl 1, $00 shl 1, $00 shl 1);
+    ZipHdrC: array[0..7] of AnsiChar; //To use Pos()
+  const
+    BUFSIZE=33*1024; //To honor Our Lord On the Vigil of Dec 8,2015
+
   begin
     ZipPos := -1;
-    W := 0;
+    Result:=-1;
+    Found := False;
+    //Unshift the Zip header
+    For i := 0 to 7 do
+      ZipHdrC[i] := Char(ZipHdr[i] shr 1);
+    //Position stream at specified offset ( to prevent going through parts
+    // of the file which we know don't have the ziphdr)
+    If StartAt > Stream.Size then
+      Raise Exception.Create('Find Zip Header - offset '''+ IntToStr(StartAt) + '''is greater than file size!');
     Stream.Seek(StartAt, soBeginning);
+    SetLength(Buf,BUFSIZE);
     repeat
-      W := Stream.ReadDWord();
-    until (W = ZipHDR shl 1) or (Stream.Size = Stream.Position);
+      ReadCount := Stream.Read(Buf[1],BUFSIZE);
+      SetLength(Buf,ReadCount);
+      ZipPos := Pos(ZipHdrC,Buf);
+    until (ZipPos>0) or (Stream.Size = Stream.Position);
 
-    if (W = ZipHDR shl 1) then //Zip Header found
+    if (ZipPos>0) then //Zip Header found
     begin
-      Stream.Seek(-4, soCurrent);
+      Stream.Seek(-ReadCount+(ZipPos-1), soCurrent);
       ZipPos := Stream.Position;
-    end;
-
+    end
+    else
+      ZipPos := -1;
+    Log('Zip header found at: '+IntToStr(ZipPos));
     Result := ZipPos;
   end;
 end.

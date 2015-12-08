@@ -9,6 +9,7 @@ uses
   Windows;
 
 procedure SetExecutePermission(const FileName: string);
+function GetOSEXEExt():String;
 
 implementation
 

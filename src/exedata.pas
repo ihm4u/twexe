@@ -65,7 +65,7 @@ implementation
 //
 function GetShadowFile():String;
 begin
-  Result:=ConcatPaths([GetStoragePath(),'_exe','_' + GetEXEName()]);
+  Result:=ConcatPaths([GetStoragePath(),'_exe','_' + GetEXEName()+GetOSEXEExt()]);
 end;
 
 //
@@ -77,6 +77,9 @@ begin
     Result:=OriginalExeFile
   else 
     Result:=ParamStr(0);
+
+  If Result='' then
+    Raise Exception.Create('Can not get executable file path!!');
 end;
 
 //
@@ -207,7 +210,7 @@ begin
         ExitCode := 3;
         Raise;
       end;
-    on E: EFCreateError do
+    on E: Exception do
       begin
         Error('Unable to create '''+ NewExe + ''': ' + E.Message);
         ExitCode := 4;
@@ -222,7 +225,10 @@ begin
     OK:= RunCmd(Cmd,Out,True) <> -1;
   end
   else
+  begin
     Error('Unable to copy ''' + ParamStr(0) + ''' executable to create shadow: '+NewExe);
+    Raise Exception.Create(''''+ GetEXEName + ''' is already running?');
+  end;
   Result:=OK;
 end;
 
@@ -236,10 +242,10 @@ var
   ZipPos: int64;
 begin
   FZipStream := TFileStream.Create(GetEXEFile(), fmOpenRead or fmShareDenyWrite);
-  //Jump to position 1000000 to make the search faster, since we
-  //know the executable size is larger than 1000000. Note that this number
+  //Jump to position 800000 to make the search faster, since we
+  //know the executable size is larger than 800000. Note that this number
   //must be divisible by 4, otherwise the ReadDWord will be off-base
-  ZipPos := FindZipHdr(FZipStream,1000000);
+  ZipPos := FindZipHdr(FZipStream,800000);
 
   //Copy Zip data to a Memory Stream
   if (ZipPos <> -1) then
@@ -344,7 +350,7 @@ begin
   ExeFS := TFileStream.Create(ExeFile, fmOpenReadWrite);
   ZFS := TFileStream.Create(ZFN, fmOpenRead or fmShareDenyWrite);
   CleanEXESize := ExeFS.Size;
-  ZipPos:=FindZipHdr(ExeFS,1000000);
+  ZipPos:=FindZipHdr(ExeFS,800000);
   if (ZipPos<>-1) then
     CleanEXESize := ZipPos;
 

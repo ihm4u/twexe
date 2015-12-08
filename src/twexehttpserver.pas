@@ -243,7 +243,7 @@ type
     OK := ParseUploadPlugin(ARequest);
     PostedFile := ARequest.Files[0].LocalFileName;
     FWikiFile:=ConcatPaths([GetStoragePath(),'_pst',ExeName+'.html']);
-    OK := MoveFile(PostedFile,FWikiFile);
+    OK := MoveFile(PostedFile,FWikiFile,True);
     if OK then
     begin
       OK := False;
