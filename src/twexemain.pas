@@ -1,7 +1,9 @@
 unit twexemain;
 
+{$codepage UTF8}
 {$mode objfpc}{$H+}
 {$define UseCThreads}
+
 interface
 
 uses
@@ -12,7 +14,6 @@ uses
   {$ENDIF}
   SysUtils,
   Classes,
-  fphttpserver,
   fpmimetypes,
   httpdefs,
   regexpr,
@@ -24,6 +25,7 @@ uses
   {$endif}
   {$ifdef windows}
   ,windowslib
+  ,Windows {for setconsoleoutputcp}
   {$endif};
 
 procedure TwexeMain(const OpenBrowser: boolean;
@@ -40,21 +42,24 @@ implementation
   var
     Serv: TTwexeHTTPServer;
   begin
-    Serv := TTwexeHTTPServer.Create(nil);
+    Serv := TTwexeHTTPServer.Create;
     try
-      Serv.OpenBrowser := FOpenBrowser;;
+      //Server should open browser as soon as it is listening
+      Serv.OpenBrowser := FOpenBrowser;
       Serv.BaseDir := GetServerDocPath();
+
+      Serv.StopRequested := False;
       {$ifdef unix}
       Serv.MimeTypesFile := '/etc/mime.types';
       {$endif}
       Serv.Threaded := False;
       Serv.Port := Port;
-      Msg('Trying port ' + IntToStr(Serv.Port),False);
+      Show('Trying port ' + IntToStr(Serv.Port),False);
       Serv.Active := True;
     except
       On Exception do
       begin
-        Msg('...Busy');
+        Show('...Busy');
         FreeAndNil(Serv);
       end;
     end;
@@ -76,10 +81,21 @@ implementation
 
   procedure PrintHeader();
   begin
-    Msg('▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁');
-    Msg('⚜ Single File TiddlyWiki executable ⚜');
-    Msg('▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔');
-    Msg('Version: '+_VERSION);
+    {$IFDEF WINDOWS}
+    SetConsoleOutputCP(CP_UTF8);
+    {$ENDIF}
+    { Ivrit ascii font from:                                     }
+    {http://patorjk.com/software/taag/#p=display&f=Ivrit&t=TWEXE }
+    Show(' _______        _________  _______  ');
+    Show('|_   _\ \      / / ____\ \/ / ____| ');
+    Show('  | |  \ \ /\ / /|  _|  \  /|  _|   ');
+    Show('  | |   \ V  V / | |___ /  \| |___  ');
+    Show('  |_|    \_/\_/  |_____/_/\_\_____| ');
+    Show('  Single File TiddlyWiki executable ');
+    Show('                                    ');
+    Show('  Version: '+_VERSION);
+    Show('------------------------------------');
+    Show('                                    ');
   end;
 
   //Extract data or abort
@@ -98,59 +114,102 @@ implementation
       if WikiName <> NewName then
       begin
         Log('Renaming '''+WikiName+''' to '''+NewName+'''.');
-        MoveFile(WikiName,NewName);
+        fileops.MoveFile(WikiName,NewName);
       end;
     except
       on E:Exception do
       begin
-        Error('Error extracting data: '+E.Message);
+        logger.Error('Error extracting data: '+E.Message);
         ExitCode := 2;
         Raise;
       end;
     end;
   end;
 
-  procedure ConvertWikiToExe(DataFile:string);
+  function ConvertWikiToExe(DataFile:string):boolean;
   Var
     OK:Boolean;
     OutExeFN:String;
     Ext:string;
   begin
+    Result:=False;
     Ext := GetOSEXEExt();
     OutExeFN := ChangeFileExt(ExpandFileName(DataFile),Ext);
-    Msg('Generating ''' + OutExeFN + '''...');
-    OK:=CopyFile(GetEXEFile(),OutExeFN);
+    Show('Generating ''' + OutExeFN + '''...');
+    OK:=fileops.CopyFile(GetEXEFile(),OutExeFN);
     
     if (OK) then
     begin
       AppendFile(OutExeFN,DataFile);
-      Msg('Congratulations! '''+ ExtractFileName(DataFile) 
+      Log(''''+ ExtractFileName(DataFile)
               + ''' has been converted to a twixie named ''' + OutExeFN + '''.');
+      Result:=True;
     end
-      else
-      Error('Unable to create ''' + OutExeFN + '''');
+    else
+    begin
+      Result:=False;
+      logger.Error('Unable to create ''' + OutExeFN + '''');
+    end;
   end;
 
-  procedure RestartEXE();
+  procedure RestartEXE(const StartBrowser:boolean=False);
   Var
-    Out:String;
+    Out,Opts:String;
   begin
     Out := '';
     //Restart executable without opening the browser
-    RunCmd(GetEXEFile()+' -n',Out,True);
+    Opts := ' -n';
+
+    If StartBrowser then
+      Opts := '';
+
+    RunCmd(GetEXEFile()+Opts,Out,True);
   end;
+
+procedure ShowCongrats();
+begin
+show('   ____                            _         _       _   _                 _');
+Show('  / ___|___  _ __   __ _ _ __ __ _| |_ _   _| | __ _| |_(_) ___  _ __  ___| |');
+Show(' | |   / _ \|  _ \ / _  |  __/ _  | __| | | | |/ _  | __| |/ _ \|  _ \/ __| |');
+Show(' | |__| (_) | | | | (_| | | | (_| | |_| |_| | | (_| | |_| | (_) | | | \__ \_|');
+Show('  \____\___/|_| |_|\__, |_|  \__,_|\__|\__,_|_|\__,_|\__|_|\___/|_| |_|___(_)');
+Show('                   |___/');
+end;
+
+function WaitForUser(txt:string='Press enter to exit...'):boolean;
+begin
+  {$ifdef windows} // So that the console doesnt close
+  WriteLn(txt);
+  Readln;
+  {$endif}
+  Result:=True;
+end;
+
+procedure StopRunningServerAndRestart();
+begin
+  //This is used when server is already running
+  //and the user ran the executable again
+  //We stop the existing server and restart
+  //so that we can serve the file
+  if TTwexeHTTPServer.SendStopRequest() then
+  begin
+    Sleep(200); //wait a little bit to give it a chance to exit
+    RestartEXE(True); //Open browser also
+  end;
+end;
 
 procedure TwexeMain(const OpenBrowser: boolean;
   const OrigExeFile: string;
   const FileArgs:array of string);
   Var
     Serv: TTwexeHTTPServer;
-    WikiToConvert: string;
+    WikiToConvert,Twixie,O: string;
     i: Integer;
-    Browser, O: string;
+
 begin
   LogVerbose := True;
   LogDebug := 0;
+  Twixie := '';
 
   FOpenBrowser := OpenBrowser;
   Exedata.OriginalExeFile := OrigExeFile;
@@ -169,16 +228,32 @@ begin
   begin
     WikiToConvert := '';
     i := 0;
-    repeat
-      WikiToConvert := ExpandFileName(FFileArgs[i]);
-      Inc(i);
-    until IsWikiFile(WikiToConvert) or (i=Length(FFileArgs));
-    If IsWikiFile(WikiToConvert) then
-       ConvertWikiToExe(WikiToConvert)
-    else
-      Error('Sorry, no wiki file found in the arguments.');
+    try
+      repeat
+        WikiToConvert := ExpandFileName(FFileArgs[i]);
+        Inc(i);
+      until IsWikiFile(WikiToConvert) or (i=Length(FFileArgs));
+      If IsWikiFile(WikiToConvert) and ConvertWikiToExe(WikiToConvert) then
+      begin
+        O:='';
+        Twixie:=ChangeFileExt(WikiToConvert,GetOSEXEExt());
+        ShowCongrats();
+        Show('Your new twixie: ' + Twixie);
 
-    Exit;
+        //Open browser and server unless -n flag was specified
+        If FOpenBrowser then
+        begin
+          WaitForUser('Press enter to run your new twixie...');
+          RunCmd(Twixie,O,True);
+        end;
+      end
+      else
+        logger.Error('Sorry, no wiki file found in the arguments.');
+
+      Exit;
+    except
+      WaitForUser();
+    end;
   end;
 
   try
@@ -192,44 +267,50 @@ begin
   except
     on E:EAccessViolation do //Shadow was running already
     begin
-      If (FOpenBrowser) then
-      begin
-        OpenURL(TTwexeHTTPServer.ReadLastURL());
-        Log('Trying to wake up browser...');
-      end;
+      StopRunningServerAndRestart;
       Exit;
     end;
     on E:Exception do
     begin
-      Error('Unable to start shadow: ' + E.Message);
+      logger.Error('Unable to start shadow: ' + E.Message);
+      StopRunningServerAndRestart;
+      //This next line will not be reached if
+      //we were able to stop the server and restart
+      WaitForUser();
       Exit;
     end;
   end;
 
   //Extract data bundled in executable
-  HandleExtractData();
+  try
+    HandleExtractData();
+  except
+    WaitForUser();
+    ExitCode:=1;
+    Exit;
+  end;
 
   try
     try
       //Start HTTP server
       Sleep(200); //Wait a little to give time for previous exe to end
       Serv:=StartServer();
+      //FIXME: Cleanup temp files: shadow _exes in tmp, unzip dir
+      If not Serv.StopRequested then
+        RestartEXE();
     finally
       If Assigned(Serv) then
          FreeAndNil(Serv);
     end;
   except on E:Exception do
     begin
-      Error('Server Exited abnormally: ' + E.Message);
-      Error('Aborting.');
+      logger.Error('Server Exited abnormally: ' + E.Message);
+      logger.Error('Aborting.');
       Exit;
     end;
   end;
-  //Server is single-threaded, but it stops listening after a
-  // Post request, so we restart the EXE to that everything is
-  // reloaded
-  //FIXME: Cleanup temp files: shadow _exes in tmp, unzip dir
-  RestartEXE();
+
+
 end;
 
 end.

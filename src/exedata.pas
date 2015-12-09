@@ -104,8 +104,6 @@ end;
 // Get executable path, including trailing separator
 //
 function GetEXEPath():String;
-Var
-   Exe:string;
 begin
    Result:=ExtractFilePath(GetEXEFile());
 end;
@@ -168,7 +166,7 @@ Var
 begin
   ZipPos:=FindZipHdr(ExeFN);
   //If ZipPos is -1 it will copy the whole file
-  Result:=CopyFile( ExeFN, ShadowFN, False, ZipPos);
+  Result:=fileops.CopyFile( ExeFN, ShadowFN, False, ZipPos);
 end;
 
 //
@@ -206,13 +204,13 @@ begin
   except
     on E:EAccessViolation do
       begin
-        Error(''''+ GetEXEName + ''' is already running: ' + E.Message);
+        logger.Error(''''+ GetEXEName + ''' is already running: ' + E.Message);
         ExitCode := 3;
         Raise;
       end;
     on E: Exception do
       begin
-        Error('Unable to create '''+ NewExe + ''': ' + E.Message);
+        logger.Error('Unable to create '''+ NewExe + ''': ' + E.Message);
         ExitCode := 4;
         Raise;
       end;
@@ -226,7 +224,7 @@ begin
   end
   else
   begin
-    Error('Unable to copy ''' + ParamStr(0) + ''' executable to create shadow: '+NewExe);
+    logger.Error('Unable to copy ''' + ParamStr(0) + ''' executable to create shadow: '+NewExe);
     Raise Exception.Create(''''+ GetEXEName + ''' is already running?');
   end;
   Result:=OK;
@@ -258,8 +256,8 @@ begin
   end
   else
   begin
-    Error('No TiddlyWiki found.');
-    Error('Please download twexe again.');
+    logger.Error('No TiddlyWiki found.');
+    logger.Error('Please download twexe again.');
     FreeAndNil(FZipStream);
   end;
 end;
@@ -276,7 +274,7 @@ begin
   //Error if ExeFile does not exist
   If not FileExists(ExeFile) then
   begin
-    Error('Executable file ''' + ExeFile + ''' not found.');
+    logger.Error('Executable file ''' + ExeFile + ''' not found.');
     Exit;
   end;
 

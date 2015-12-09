@@ -16,6 +16,7 @@ uses
   SysUtils,
   Classes,
   fphttpserver,
+  fphttpclient,
   fpmimetypes,
   httpdefs,
   regexpr,
@@ -41,12 +42,15 @@ type
     FUploadDir: string;
     FURL: string;
     FSavingConfigUpdated:boolean;
-    FOpenBrowser: boolean;
+    FOpenBrowser,FStopRequested: boolean;
     procedure SetBaseDir(const AValue: string);
     procedure HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
     procedure HandlePostReq(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
+
+    const
+      StopURI='/twexe/api/exitserver';
 
   protected
     procedure CheckMimeLoaded;
@@ -58,20 +62,56 @@ type
 
   public
     class function ReadLastURL():string;
+    class function SendStopRequest(const BaseURL:string=''):boolean;
     procedure HandleRequest(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse); override;
+    constructor Create;
 
     property BaseDir: string read FBaseDir write SetBaseDir;
     property MimeTypesFile: string read FMimeTypesFile write FMimeTypesFile;
     property SavingConfigUpdated: boolean read FSavingConfigUpdated write FSavingConfigUpdated;
     property URL: string read FURL write FURL;
     property OpenBrowser: boolean read FOpenBrowser write FOpenBrowser;
+    property StopRequested: boolean read FStopRequested write FStopRequested;
+
 
   end;
 
   implementation
 
+  { Utilities }
+  procedure StoreLastURL(const URL:string);
+  Var UFile : Text;
+  begin
+   Assign(UFile, ConcatPaths([GetStoragePath(),GetEXEName()+'_lasturl']));
+   ReWrite(UFile);
+   Writeln(UFile,URL);
+   Close(UFile);
+  end;
+
+
   { TTwexeHTTPServer }
+
+  class function TTwexeHTTPServer.SendStopRequest(const BaseURL:string=''):boolean;
+  var
+    SrvURL,Resp:string;
+  begin
+  If BaseURL='' then
+    SrvURL:=ReadLastURL()
+  else
+    SrvURL:=BaseURL;
+  With TFPHttpClient.Create(Nil) do
+    try
+      Result:=False;
+      Resp:=TrimRight(Get(SrvURL+StopURI));
+      If Resp='OK' then
+        Result:=True
+      else
+        logger.Error(SrvURL + ' responded ''' + Resp + ''' to stop request.');
+    finally
+      Free;
+    end;
+  end;
 
   class function TTwexeHTTPServer.ReadLastURL():string;
   Var
@@ -80,7 +120,7 @@ type
   begin
    Result:='';
    try
-     System.Assign(UFile, ConcatPaths([GetTempDir(False),GetEXEName()+'_lasturl']));
+     System.Assign(UFile, ConcatPaths([GetStoragePath(),GetEXEName()+'_lasturl']));
      Reset(UFile);
      Readln(UFile,LURL);
      Close(UFile);
@@ -89,15 +129,11 @@ type
    end;
   end;
 
-  procedure StoreLastURL(const URL:string);
-  Var UFile : Text;
+  constructor TTwexeHTTPServer.Create;
   begin
-   Assign(UFile, ConcatPaths([GetTempDir(False),GetEXEName()+'_lasturl']));
-   ReWrite(UFile);
-   Writeln(UFile,URL);
-   Close(UFile);
+    StopRequested:=False;
+    inherited;
   end;
-
 
   procedure TTwexeHttpServer.StartServerSocket;
   begin
@@ -114,7 +150,7 @@ type
     else
       Self.URL := 'http://' + Self.Address + ':' + IntToStr(Self.Port);
 
-    Msg(LineEnding + 'Serving on ' + Self.URL);
+    Show(LineEnding + 'Serving on ' + Self.URL);
     StoreLastURL(Self.URL);
 
     If (FOpenBrowser) then
@@ -160,7 +196,6 @@ type
     if (FileNameNoExt(CleanURI) = GetEXEName()) or (CleanURI='') then
     begin
       FN := GetUnzippedWikiFile();
-      WriteLn('FN=',FN);
       if FileExists(FN) then
       begin
         Result:=True;
@@ -171,12 +206,12 @@ type
           //to the twexe server
           try
             TmpWikiFN:=ExtractFilePath(FN)+'_orig_'+ExtractFileName(FN);
-            MoveFile(FN,TmpWikiFN);
+            fileops.MoveFile(FN,TmpWikiFN);
             //FIXME: This should update saving config only if twexe is found
             SavingConfigUpdated:=EnsureTwexeSavingConfig(TmpWikiFN,FN,Port);
             DeleteFile(TmpWikiFN);
           except on E:Exception do
-            Error('Unable to update saving configuration for '''+ FN + ''': '+ E.Message);
+            logger.Error('Unable to update saving configuration for '''+ FN + ''': '+ E.Message);
           end;
         end;
 
@@ -262,7 +297,7 @@ type
       if ( UserFName <> EXEName ) then
          Log('User file "'+UserFName+'" is different from executable name, ignoring.');
       FWikiFile := ConcatPaths([FUploadDir, ExeName])+'.html';
-      OK := CopyFile(ARequest.Files[0].LocalFileName, FWikiFile, True);
+      OK := fileops.CopyFile(ARequest.Files[0].LocalFileName, FWikiFile, True);
        ***************************************************************************}
     end;
 
@@ -316,8 +351,18 @@ type
   procedure TTwexeHTTPServer.HandleRequest(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
   begin
-    Log(LineEnding + 'Method: ' + ARequest.Method);
+    Log('Method: ' + ARequest.Method);
     Log('Request URI: ' + ARequest.URI);
+    If Arequest.URI = StopURI then
+    begin
+      AResponse.Code:=200;
+      AResponse.Content:='OK';
+      AResponse.ContentType:='text/plain';
+      AResponse.SendContent;
+      StopRequested:=True;
+      Self.Active:=False;
+      exit;
+    end;
     if ARequest.Method = 'GET' then
     begin
       HandleGetReq(ARequest, AResponse);

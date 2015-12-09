@@ -167,10 +167,7 @@ implementation
 
     NewCfgPost='/store</pre>' + LineEnding + '</div>' + LineEnding + LineEnding;
   begin
-    //We dont add anything if when is woIfTwexe
-    If When = woIfTwexe then
-      Exit;
-    
+
     //We exit if there is any wiki name already there
     if HasUploadName(SBuffer) then
       Exit;

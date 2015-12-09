@@ -54,8 +54,8 @@ begin
     if ErrorMsg<>'' then
     begin
       PrintHeader();
-      Error(ErrorMsg);
-      Error('Aborting.');
+      logger.Error(ErrorMsg);
+      logger.Error('Aborting.');
       Terminate;
     end;
 
@@ -90,8 +90,6 @@ begin
 end;
 
 procedure TTwexeApp.DoRun;
-var
-  ErrorMsg: String;
 begin
 
   ProcessOptions();

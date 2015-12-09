@@ -112,7 +112,7 @@ implementation
       OK := RenameFile(FromName,ToName);
     end;
     If not OK then
-      Error('Unable to move ''' + FromName + ''' to ''' + ToName + '''');
+      logger.Error('Unable to move ''' + FromName + ''' to ''' + ToName + '''');
     Result:=OK;
   end;
 
@@ -131,7 +131,7 @@ implementation
     FName := ChangeFileExt(FName, '');
     Suffix := FormatDateTime('_YYYY_MM_DD__hh_nn_ss', Now);
     BakName := Dir + FName + Suffix + Ext;
-    OK := CopyFile(FromName, BakName);
+    OK := fileops.CopyFile(FromName, BakName);
     //FIXME: Now delete old files
     Result := OK;
   end;

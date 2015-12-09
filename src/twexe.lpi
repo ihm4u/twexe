@@ -25,11 +25,12 @@
         <CompilerOptions>
           <Version Value="11"/>
           <Target>
-            <Filename Value="c:/temp/build/$(TargetCPU)-$(TargetOS)/twexe"/>
+            <Filename Value="../build/$(TargetCPU)-$(TargetOS)/twexe"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <UnitOutputDirectory Value="c:/temp/build/$(TargetCPU)-$(TargetOS)"/>
+            <OtherUnitFiles Value="/usr/lib/fpc/src/packages/fcl-web/units/i386-linux/"/>
+            <UnitOutputDirectory Value="../build/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
@@ -67,7 +68,7 @@
         <PackageName Value="LCLBase"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="14">
       <Unit0>
         <Filename Value="twexe.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -121,6 +122,10 @@
         <Filename Value="fphttpserver.pp"/>
         <IsPartOfProject Value="True"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="fphttpclient.pp"/>
+        <IsPartOfProject Value="True"/>
+      </Unit13>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
