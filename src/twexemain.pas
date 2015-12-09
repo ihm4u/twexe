@@ -97,7 +97,6 @@ implementation
     Show('  | |   \ V  V / | |___ /  \| |___  ');
     Show('  |_|    \_/\_/  |_____/_/\_\_____| ');
     Show('  Single File TiddlyWiki executable ');
-    Show('                                    ');
     Show('  Version: '+_VERSION);
     Show('------------------------------------');
     Show('                                    ');

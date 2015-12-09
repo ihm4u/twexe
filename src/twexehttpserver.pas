@@ -151,7 +151,7 @@ type
       Self.URL := 'http://' + Self.Address + ':' + IntToStr(Self.Port);
     //This is the first line shown after the "Trying port" line
     Show(LineEnding + ''''
-      + GetEXEName() + '''' + ' found on ' + Self.URL);
+      + GetEXEName() + '''' + ' running on ' + Self.URL);
     StoreLastURL(Self.URL);
 
     If (FOpenBrowser) then
@@ -288,6 +288,13 @@ type
       AppendFile(GetEXEFile(),FWikiFile);
 
       //Make backup in specified Backup Dir
+      //If not absolute, backup dir is in reference
+      //to GetEXEPath() - the path of the twixie file.
+      If Length(FBackupDir) = 0 then
+        FBackupDir:=GetEXEPath()
+      else if FBackupDir[Length(FBackupDir)] <> DirectorySeparator then
+        FBackupDir:=ConcatPaths([GetEXEPath(),FBackupDir]);
+
       BakFile := ConcatPaths([FBackupDir, ExeName + '.html']);
       OK := MakeBackup(FWikiFile, BakFile);
 
@@ -307,7 +314,7 @@ type
     if OK then
     begin
       ThisMoment := Now;
-      Show('Wiki saved on ' + FormatDateTime('dddd "at" hh:mm:ss.',ThisMoment));
+      Show(''''+GetEXEName()+''' saved on ' + FormatDateTime('dddd "at" hh:nn:ss.',ThisMoment));
       AResponse.Code := 200
     end
     else
@@ -360,8 +367,7 @@ type
   procedure TTwexeHTTPServer.HandleRequest(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
   begin
-    Log('Method: ' + ARequest.Method);
-    Log('Request URI: ' + ARequest.URI);
+    Log('Method: ''' + ARequest.Method + ''' URI: ''' + ARequest.URI + '''');
     If Arequest.URI = StopURI then
     begin
       AResponse.Code:=200;

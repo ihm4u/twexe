@@ -8,17 +8,112 @@ interface
 uses
   SysUtils,Classes,
   
-  logger;
+  logger,regexpr;
+
+type
+  TFileFuncName = function (const FileName:string;
+                            var Stop:boolean;
+                            var Params:TStrings):integer;
 
   function MakeDirs(Dirs: string): boolean;
   function CopyFile(FromName: string; ToName: string; 
     Delete: boolean = False; const Count:LongInt=-1): boolean;
   function MoveFile(FromName: string; ToName: string; const DeleteFirst:boolean=False): boolean;
-  function MakeBackup(FromName: string; ToName: string): boolean;
+  function MakeBackup(const FromName: string;
+    const ToName: string;
+    const NoToKeep:Integer=3): boolean;
   function FindZipHdr(const FileName:string; const StartAt:Int64=0):Int64;
   function FindZipHdr(Stream:TStream; const StartAt:Int64=0):Int64;
+  function ForEachFile(const WildPath:string;
+    Func:TFileFuncName;
+    Params: TStrings;
+    const Flags:LongInt=faAnyFile and faDirectory):integer;
 
 implementation
+
+  function ForEachFile(const WildPath:string;
+    Func:TFileFuncName; Params:TStrings;
+    const Flags:LongInt=faAnyFile and faDirectory):integer;
+  var
+    Info : TSearchRec;
+    Stop : boolean;
+  begin
+    //Result:=False;
+    Stop := False;
+    If FindFirst(WildPath,Flags,Info)=0 then
+    begin
+      Repeat
+        Result:=Func(Info.Name,Stop,Params);
+      Until (FindNext(info)<>0) or Stop;
+    end;
+    FindClose(Info);
+  end;
+
+  function CompareBakEntries(BakList:TStringList;i,j:Integer):Integer;
+  begin
+    Result := StrToInt64Def(BakList.Names[j],0)
+      -StrToInt64Def(BakList.Names[i],0);
+  end;
+
+  function MakeList(const Name:String;var Stop:boolean; var Params:TStrings):integer;
+  Const
+    Regex='.*_(\d{4})_(\d{2})_(\d{2})__(\d{2})_(\d{2})_(\d{2}).*';
+  Var
+    DT: string;
+    List: TStrings;
+    S: string;
+  begin
+    Result:=0;
+    List:=Params;
+    S:=Name;
+    If ExecRegExpr(Regex,S) then
+    begin
+      DT:=ReplaceRegExpr(Regex,S,'$1$2$3$4$5$6',True);
+      List.Add(DT+'='+Name);
+    end;
+    Result:=List.Count;
+  end;
+
+  procedure DeleteOld(const BaseName:string; const NoToKeep:Integer);
+  var
+    List:TStringList;
+    DT:Int64;
+    i,DCount:Integer;
+    Dir,FN:string;
+    F:TFileFuncName;
+  begin
+    List:=TStringList.Create;
+    try
+      try
+        //Build list of files
+        Dir := ConcatPaths([ExtractFilePath(BaseName),'*']);
+        ForEachFile(Dir,@MakeList,List);
+
+        //Exit if we are asked to keep more than what already exists
+        If NoToKeep >= List.Count then
+          Exit;
+
+        //Sort the list
+        List.CustomSort(@CompareBakEntries);
+        DCount:=0;
+
+        //Now delete the last files in the list
+        For i:=NoToKeep to List.Count-1 do
+        begin
+          FN:= ConcatPaths([ExtractFilePath(BaseName),List.ValueFromIndex[i]]);
+          FN:= ExpandFileName(FN);
+          DeleteFile(FN);
+          Inc(DCount);
+        end;
+        Log('Deleted ('+IntToStr(DCount)+') backups.');
+      finally
+        If Assigned(List) then
+          FreeAndNil(List);
+      end;
+    except on E:Exception do
+       Error('Unable to delete old backups: ' + E.toString + ' - ' + E.Message);
+    end;
+  end;
 
   //Make the directories needed for file in Dirs
   function MakeDirs(Dirs: string): boolean;
@@ -116,7 +211,9 @@ implementation
     Result:=OK;
   end;
 
-  function MakeBackup(FromName: string; ToName: string): boolean;
+  function MakeBackup(const FromName: string;
+    const ToName: string;
+    const NoToKeep:Integer=3): boolean;
   var
     OK: boolean;
     Suffix: string;
@@ -132,7 +229,7 @@ implementation
     Suffix := FormatDateTime('_YYYY_MM_DD__hh_nn_ss', Now);
     BakName := Dir + FName + Suffix + Ext;
     OK := fileops.CopyFile(FromName, BakName);
-    //FIXME: Now delete old files
+    DeleteOld(ToName,NoToKeep); //Now delete old files
     Result := OK;
   end;
 

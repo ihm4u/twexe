@@ -126,10 +126,13 @@ begin
     Exit;
 
   S:=Str;
+  Spcs:= StringOfChar(#32,Nspaces);
+  {FIXME Result := WrapText(S, LineEnding + Spcs, [#32, '/', '\', '-', '+'] ,Len);}
+
   Lineno:=1;
   nadds:=0;
   Poz:=len*lineno-Nspaces;
-  Spcs:= StringOfChar(#32,Nspaces);
+
   repeat
     Insert(LineEnding+spcs,S,Poz);
     Inc(nadds);
