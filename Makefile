@@ -6,7 +6,8 @@ EMPTY_TW5=src/empty.html
 PRODOPTS=
 DBGOPTS=#-g
 
-ARCHES=linux64 #win32
+THISARCH=x86_64-linux
+ARCHES=x86_64-linux #win32
 BLDDIR=build/$(ARCH)
 EXES= $(addsuffix /$(BINARY),$(addprefix build/,$(ARCHES)))
 CURRVER:=$(shell git describe --tags --abbrev=4)
@@ -19,7 +20,7 @@ checkversion:=$(shell if ! grep -Fqs `git describe --tags --abbrev=4` "src/versi
 
 all: $(EXES)
 
-build/linux64/$(BINARY): $(SRCFILES)
+build/x86_64-linux/$(BINARY): $(SRCFILES)
 	@mkdir -p $(@D)
 	if [ "$$PROD" = "yes" ]; then \
 		fpc -FE$(@D) $(PRODOPTS) -Tlinux $(SRC); \
@@ -27,7 +28,12 @@ build/linux64/$(BINARY): $(SRCFILES)
 		fpc -FE$(@D) $(DBGOPTS) -Tlinux $(SRC); \
 	fi
 
-rel: $(EXES)
+rel:
+	mkdir -p rel/$(THISARCH)
+	build/$(THISARCH)/$(BINARY) -n src/tw5editions/empty.html && \
+		mv src/tw5editions/empty rel/$(THISARCH)
+
+relold: $(EXES)
 	@make clean
 	@make PROD=yes all
 	@for i in $(ARCHES); do \
