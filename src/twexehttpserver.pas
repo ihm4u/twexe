@@ -303,9 +303,15 @@ type
 
     //Send 200 OK to the browser if we were able to save the file
     if OK then
+    begin
+      Show('Wiki saved.');
       AResponse.Code := 200
+    end
     else
+    begin
+      logger.Error('Unable to save wiki!!');
       AResponse.Code := 404;
+    end;
 
     //Send response
     AResponse.SendContent;

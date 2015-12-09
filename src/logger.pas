@@ -17,11 +17,22 @@ uses
   shadow was executed.
   For now we leave it unimplemented in unix }
 const
-  White = 1;
-  Black = 2;
-  Green = 3;
-  Yellow = 4;
-  Red = 5;
+  Black = 0;
+  Blue = 1;
+  Green = 2;
+  Cyan = 3;
+  Red = 4;
+  Magenta = 5;
+  Brown = 6;
+  LightGray = 7;
+  DarkGray = 8;
+  LightBlue = 9;
+  LightGreen = 10;
+  LightCyan = 11;
+  LightRed = 12;
+  LightMagenta = 13;
+  Yellow = 14;
+  White = 15;
 {$endif}
 
 var
@@ -37,37 +48,121 @@ implementation
 
 {$ifdef unix}
 procedure TextColor(const Color:byte);
+var
+  S:string;
 begin
+  //FIXME: most colors need to be fixed for better look
+  S:=#27 + '[';
+  Case Color of
+    Black:        S:=S+'30';
+    Blue:         S:=S+'1;'+'34';
+    Green:        S:=S+'0;'+'32';
+    Cyan:         S:=S+'1;'+'36';
+    Red:          S:=S+'1;'+'31';
+    Magenta:      S:=S+'1;'+'35';
+    Brown:        S:=S+'33';      //Yellow
+    LightGray:    S:=S+'37';      //White
+    DarkGray:     S:=S+'1;'+'30'; //Bold black
+    LightBlue:    S:=S+'34';
+    LightGreen:   S:=S+'32';
+    LightCyan:    S:=S+'36';
+    LightRed:     S:=S+'31';
+    LightMagenta: S:=S+'35';
+    Yellow:       S:=S+'33';
+    White:        S:=S+'1;'+'37';
+  end;
+  S:=S+'m';
+  Write(S);
 end;
 
 procedure TextBackground(const Color:byte);
+var
+  S:string;
 begin
+  //FIXME: most colors need to be fixed for better look
+  S:=#27 + '[';
+  Case Color of
+    Black:        S:=S+'40';
+    Blue:         S:=S+'1;'+'44';
+    Green:        S:=S+'0;'+'42';
+    Cyan:         S:=S+'1;'+'46';
+    Red:          S:=S+'1;'+'41';
+    Magenta:      S:=S+'1;'+'45';
+    Brown:        S:=S+'43';      //Yellow
+    LightGray:    S:=S+'47';      //White
+    DarkGray:     S:=S+'1;'+'40'; //Bold black
+    LightBlue:    S:=S+'44';
+    LightGreen:   S:=S+'42';
+    LightCyan:    S:=S+'46';
+    LightRed:     S:=S+'41';
+    LightMagenta: S:=S+'45';
+    Yellow:       S:=S+'43';
+    White:        S:=S+'1;'+'47'; //Bold
+  end;
+  S:=S+'m';
+  Write(S);
 end;
 {$endif}
 
 procedure ResetColors();
 begin
+  {$ifdef windows}
   TextColor(White);
   TextBackground(Black);
+  {$endif}
+
+  {$ifdef unix}
+  Write(#27+'[0m');
+  {$endif}
+end;
+
+function Indent(const Str:string; const Nspaces:Integer; Len: Integer=77):string;
+var
+  Spcs,S:string;
+  Poz,Lineno,nadds:integer;
+begin
+  Result:=Str;
+  If Length(Str) < Len then
+    Exit;
+
+  S:=Str;
+  Lineno:=1;
+  nadds:=0;
+  Poz:=len*lineno-Nspaces;
+  Spcs:= StringOfChar(#32,Nspaces);
+  repeat
+    Insert(LineEnding+spcs,S,Poz);
+    Inc(nadds);
+    Inc(Lineno);
+    Poz:=Poz+len;
+  until Poz >= Length(s);
+  Result:=S;
 end;
 
 procedure Show(const Msg: string; const NewLine:boolean=True);
+Var
+  S:string;
 begin
+  TextColor(DarkGray);
+  S:=Indent(Msg,3,79);
   if (NewLine) then
-    WriteLn(Msg)
+    WriteLn(S)
   else
-    Write(Msg);
+    Write(S);
+  ResetColors();
 end;
 
 procedure Log(const Msg: string);
 Var
   TS: string;
+  S: string;
 begin
   if (LogVerbose) then
   begin
-    TS:=FormatDateTime('   [ ddd. hh:mm:ss ] - ',Now);
+    TS:=FormatDateTime(' [ ddd. hh:mm:ss ] - ',Now);
     TextColor(green);
-    WriteLn(TS+Msg);
+    S:=Indent(Msg,Length(TS),77);
+    WriteLn(TS+S);
     ResetColors();
   end;
 end;
@@ -79,11 +174,12 @@ begin
 end;
 
 procedure Error(const Msg: string);
+Const
+  HDR='ERROR: ';
 begin
     TextBackground(Red);
     TextColor(Yellow);
-    Write('ERROR: ');
-    WriteLn(Msg);
+    WriteLn(HDR+Indent(Msg,Length(HDR),77));
     ResetColors();
 end;
 
