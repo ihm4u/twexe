@@ -122,7 +122,7 @@ var
   Poz,Lineno,nadds:integer;
 begin
   Result:=Str;
-  If Length(Str) < Len then
+  If Length(Str)+Nspaces < Len then
     Exit;
 
   S:=Str;
@@ -144,7 +144,7 @@ Var
   S:string;
 begin
   TextColor(DarkGray);
-  S:=Indent(Msg,3,79);
+  S:=Indent(Msg,1,79);
   if (NewLine) then
     WriteLn(S)
   else
@@ -155,14 +155,23 @@ end;
 procedure Log(const Msg: string);
 Var
   TS: string;
-  S: string;
+  S,NL: string;
 begin
   if (LogVerbose) then
   begin
+    S:=Msg;
+    NL:='';
+    //If message has a line ending in the beginning
+    //make sure we put it before the time/date
+    If (Length(Msg)>0) and (Msg[1]=LineEnding) then
+    begin
+      NL := LineEnding;
+      Delete(S,1,1);
+    end;
     TS:=FormatDateTime(' [ ddd. hh:mm:ss ] - ',Now);
     TextColor(green);
-    S:=Indent(Msg,Length(TS),77);
-    WriteLn(TS+S);
+    S:=Indent(S,Length(TS),77);
+    WriteLn(NL+TS+S);
     ResetColors();
   end;
 end;

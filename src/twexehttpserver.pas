@@ -149,8 +149,9 @@ type
       Self.URL := 'http://127.0.0.1:' + IntToStr(Self.Port)
     else
       Self.URL := 'http://' + Self.Address + ':' + IntToStr(Self.Port);
-
-    Show(LineEnding + 'Serving on ' + Self.URL);
+    //This is the first line shown after the "Trying port" line
+    Show(LineEnding + ''''
+      + GetEXEName() + '''' + ' found on ' + Self.URL);
     StoreLastURL(Self.URL);
 
     If (FOpenBrowser) then
@@ -273,6 +274,7 @@ type
     BakFile: string;
     ExeName: string;
     PostedFile: string;
+    ThisMoment: TDateTime;
   begin
     ExeName := GetEXEName();
     OK := ParseUploadPlugin(ARequest);
@@ -304,7 +306,8 @@ type
     //Send 200 OK to the browser if we were able to save the file
     if OK then
     begin
-      Show('Wiki saved.');
+      ThisMoment := Now;
+      Show('Wiki saved on ' + FormatDateTime('dddd "at" hh:mm:ss.',ThisMoment));
       AResponse.Code := 200
     end
     else
@@ -334,7 +337,7 @@ type
       try
         CheckMimeLoaded;
         AResponse.ContentType := MimeTypes.GetMimeType(ExtractFileExt(FN));
-        Log(LineEnding + 'Serving file: "' + Fn + '". Reported Mime type: ' +
+        Log('Serving file: ''' + Fn + '''. Type: ' +
           AResponse.ContentType);
         //AResponse.ContentEncoding:='gzip';
         AResponse.ContentLength := F.Size;

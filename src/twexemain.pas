@@ -54,12 +54,16 @@ implementation
       {$endif}
       Serv.Threaded := False;
       Serv.Port := Port;
-      Show('Trying port ' + IntToStr(Serv.Port),False);
+      //We put a newline in front because it is the first thing
+      //reported by the shadow, which is a different process
+      //and we may have the shell prompt in the middle...we
+      //want it to look nice
+      Log(LineEnding+'Trying port ' + IntToStr(Serv.Port) );
       Serv.Active := True;
     except
       On Exception do
       begin
-        Show('...Busy');
+        Log('Port ' + IntToStr(Serv.Port) + ' is busy.');
         FreeAndNil(Serv);
       end;
     end;
@@ -86,6 +90,7 @@ implementation
     {$ENDIF}
     { Ivrit ascii font from:                                     }
     {http://patorjk.com/software/taag/#p=display&f=Ivrit&t=TWEXE }
+    WriteLn();
     Show(' _______        _________  _______  ');
     Show('|_   _\ \      / / ____\ \/ / ____| ');
     Show('  | |  \ \ /\ / /|  _|  \  /|  _|   ');
