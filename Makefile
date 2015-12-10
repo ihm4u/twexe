@@ -12,7 +12,7 @@ BLDDIR=build/$(ARCH)
 EXES= $(addsuffix /$(BINARY),$(addprefix build/,$(ARCHES)))
 CURRVER:=$(shell git describe --tags --abbrev=4)
 
-.PHONY: $(ARCHES) rel
+.PHONY: $(ARCHES) rel version
 
 checkversion:=$(shell if ! grep -Fqs `git describe --tags --abbrev=4` "src/version.pas"; then \
 	   sed -e 's/___VERSION___/$(CURRVER)/' src/version.skel > "src/version.pas"; \
@@ -40,6 +40,9 @@ relold: $(EXES)
 		mkdir -p "rel/$$i"; \
 		cp "build/$$i/$(BINARY)" "rel/$$i/"; \
 	done
+
+version:
+	@echo $(CURRVER)
 
 clean:
 	rm -rf build

@@ -36,6 +36,7 @@ procedure PrintHeader();
 implementation
   var
     FOpenBrowser: boolean;
+    DoNotWaitForUser:boolean;
     FFileArgs : array of string;
 
   function TryPort(Port: word): TTwexeHTTPServer;
@@ -160,6 +161,7 @@ implementation
   Var
     Out,Opts:String;
   begin
+
     Out := '';
     //Restart executable without opening the browser
     Opts := ' -n';
@@ -168,6 +170,9 @@ implementation
       Opts := '';
 
     RunCmd(GetEXEFile()+Opts,Out,True);
+    //Ignore WaitForUser() if somebody calls
+    //it after having run RestartEXE()
+    DoNotWaitForUser:=True;
   end;
 
 procedure ShowCongrats();
@@ -183,9 +188,13 @@ end;
 function WaitForUser(txt:string='Press enter to exit...'):boolean;
 begin
   {$ifdef windows} // So that the console doesnt close
-  WriteLn(txt);
-  Readln;
+  If not DoNotWaitForUser then
+  begin
+    WriteLn(txt);
+    Readln;
+  end;
   {$endif}
+
   Result:=True;
 end;
 
@@ -197,7 +206,7 @@ begin
   //so that we can serve the file
   if TTwexeHTTPServer.SendStopRequest() then
   begin
-    Sleep(200); //wait a little bit to give it a chance to exit
+    Sleep(400); //wait a little bit to give it a chance to exit
     RestartEXE(True); //Open browser also
   end;
 end;
@@ -214,6 +223,7 @@ begin
   LogVerbose := True;
   LogDebug := 0;
   Twixie := '';
+  DoNotWaitForUser:=False;
 
   FOpenBrowser := OpenBrowser;
   Exedata.OriginalExeFile := OrigExeFile;
@@ -278,8 +288,6 @@ begin
     begin
       logger.Error('Unable to start shadow: ' + E.Message);
       StopRunningServerAndRestart;
-      //This next line will not be reached if
-      //we were able to stop the server and restart
       WaitForUser();
       Exit;
     end;

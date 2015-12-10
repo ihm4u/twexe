@@ -9,7 +9,7 @@ uses
   {$ENDIF}{$ENDIF}
   Classes, SysUtils, CustApp
   { you can add units after this }
-  ,logger, twexemain
+  ,logger, twexemain, HTTPDefs, fphttpclient
   ;
 
 type
