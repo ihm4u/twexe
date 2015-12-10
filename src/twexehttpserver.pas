@@ -44,11 +44,12 @@ type
     FUploadDir: string;
     FURL: string;
     FSavingConfigUpdated: boolean;
-    FOpenBrowser, FStopRequested: boolean;
+    FOpenBrowser, FStopRequested, FStoreRequestDone: boolean;
+
     procedure SetBaseDir(const AValue: string);
     procedure HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
-    procedure HandlePostReq(var ARequest: TFPHTTPConnectionRequest;
+    procedure HandleStoreReq(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
 
   const
@@ -73,6 +74,7 @@ type
     property URL: string read FURL write FURL;
     property OpenBrowser: boolean read FOpenBrowser write FOpenBrowser;
     property StopRequested: boolean read FStopRequested write FStopRequested;
+    property StoreRequestDone: boolean read FStoreRequestDone write FStoreRequestDone;
 
 
   end;
@@ -133,6 +135,7 @@ end;
 constructor TTwexeHTTPServer.Create;
 begin
   StopRequested := False;
+  StoreRequestDone := False;
   inherited;
 end;
 
@@ -259,7 +262,7 @@ begin
   FreeAndNil(SL);
 end;
 
-procedure TTwexeHTTPServer.HandlePostReq(var ARequest: TFPHTTPConnectionRequest;
+procedure TTwexeHTTPServer.HandleStoreReq(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
 var
   OK: boolean;
@@ -269,6 +272,7 @@ var
   ThisMoment: TDateTime;
 begin
   try
+    StoreRequestDone := False;
     ExeName := GetEXEName();
     OK := ParseUploadPlugin(ARequest);
     PostedFile := ARequest.Files[0].LocalFileName;
@@ -309,6 +313,7 @@ begin
       ThisMoment := Now;
       Show('''' + GetEXEName() + ''' saved on ' +
         FormatDateTime('dddd "at" hh:nn:ss.', ThisMoment));
+      StoreRequestDone := True;
       AResponse.Code := 200;
     end
     else
@@ -385,7 +390,7 @@ begin
   end;
   if (ARequest.Method = 'POST') and (ARequest.URI = '/store') then
   begin
-    HandlePostReq(ARequest, AResponse);
+    HandleStoreReq(ARequest, AResponse);
     Exit;
   end;
 end;

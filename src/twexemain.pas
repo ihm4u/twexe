@@ -17,7 +17,9 @@ uses
   httpdefs,
   regexpr,
   lclintf,
+  ssockets, //For ESocketError
 
+  {twexe units}
   twexehttpserver,exedata,logger,fileops,wikiops,version
   {$ifdef unix}
   ,unixlib
@@ -37,8 +39,10 @@ implementation
     FOpenBrowser: boolean;
     DoNotWaitForUser:boolean;
     FFileArgs : array of string;
+    Serv: TTwexeHTTPServer;
+    StoreReqFinished,StopRequested: boolean;
 
-  function TryPort(Port: word): TTwexeHTTPServer;
+  function TryPort(Port: word; var TryAgain:boolean; var StoreReqDone:boolean): TTwexeHTTPServer;
   var
     Serv: TTwexeHTTPServer;
   begin
@@ -49,20 +53,43 @@ implementation
       Serv.BaseDir := GetServerDocPath();
 
       Serv.StopRequested := False;
-      Serv.Threaded := False;
+      Serv.Threaded := True;
       Serv.Port := Port;
+      TryAgain := True;
+      StoreReqDone := False;
       //We put a newline in front because it is the first thing
       //reported by the shadow, which is a different process
       //and we may have the shell prompt in the middle...we
       //want it to look nice
       Log(LineEnding+'Trying port ' + IntToStr(Serv.Port) );
-      Serv.Active := True;
+      try
+        Serv.Active := True;
+      finally
+        //Read comment below about seAcceptFailed
+        StopRequested:=Serv.StopRequested;
+        StoreReqDone:=Serv.StoreRequestDone;
+      end;
     except
-      On Exception do
+      On E:ESocketError do
       begin
-        Log('Port ' + IntToStr(Serv.Port) + ' is busy.');
+        If E.Code = seBindFailed then
+        begin
+          Log('Port ' + IntToStr(Serv.Port) + ' is busy: ' + E.Message);
+          TryAgain := True
+        end;
+        //We get E.Code=seAcceptFailed after a handler thread
+        //has called Serv.Active:=False, this is done in some
+        //post requests which stop the server:
+        //1. When a /store POST has been received
+        //2. Whan a /twexe/api/exitserver POST has been received
+        //The reason is that the thread clears the socket and
+        //there is a bug in fphttpserver not handling it properly
+
+        //Either way, free the Server
         FreeAndNil(Serv);
       end;
+      On E:Exception do
+        FreeAndNil(Serv);
     end;
 
     Result := Serv;
@@ -71,13 +98,20 @@ implementation
   function StartServer(): TTwexeHTTPServer;
   var
     Port: word;
+    TryAgain : boolean;
   begin
     Port := 8080;
+    TryAgain := True;
     repeat
-      Result := TryPort(Port);
+      Result := TryPort(Port,TryAgain,StoreReqFinished);
+
       if Result = nil then
-        Inc(Port);
-    until (Result <> nil) or (Port > 8095);
+        Inc(Port)
+    until (Result <> nil)
+      or (Port > 8095)
+      or not TryAgain
+      or StopRequested
+      or StoreReqFinished;
   end;
 
   procedure PrintHeader();
@@ -165,6 +199,11 @@ implementation
     If StartBrowser then
       Opts := '';
 
+    //This causes the server to wait for all requests
+    //to be finished
+    If Assigned(Serv) then
+      FreeAndNil(Serv);
+
     RunCmd(GetEXEFile()+Opts,Out,True);
     //Ignore WaitForUser() if somebody calls
     //it after having run RestartEXE()
@@ -211,7 +250,6 @@ procedure TwexeMain(const OpenBrowser: boolean;
   const OrigExeFile: string;
   const FileArgs:array of string);
   Var
-    Serv: TTwexeHTTPServer;
     WikiToConvert,Twixie,O: string;
     i: Integer;
 
@@ -304,7 +342,7 @@ begin
       Sleep(200); //Wait a little to give time for previous exe to end
       Serv:=StartServer();
       //FIXME: Cleanup temp files: shadow _exes in tmp, unzip dir
-      If not Serv.StopRequested then
+      If StoreReqFinished and not StopRequested then
         RestartEXE();
     finally
       If Assigned(Serv) then
