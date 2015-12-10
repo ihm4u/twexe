@@ -5,12 +5,26 @@ unit unixlib;
 interface
 
 uses
-  BaseUnix;
+  BaseUnix, fpmimetypes;
 
 procedure SetExecutePermission(const FileName: string);
 function GetOSEXEExt():String;
+function GetMimeType(const Ext:string):string;
 
 implementation
+var
+  FMimeLoaded: boolean;
+  FMimeTypesFile: string;
+
+function GetMimeType(const Ext:string):string;
+begin
+  if (not FMimeLoaded) then
+  begin
+    MimeTypes.LoadFromFile('/etc/mime.types');
+    FMimeLoaded := True;
+  end;
+  Result:=MimeTypes.GetMimeType(Ext);
+end;
 
 procedure SetExecutePermission(const FileName: string);
 begin

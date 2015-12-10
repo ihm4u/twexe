@@ -12,13 +12,16 @@ uses
   {$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}
+  unixlib,
   {$ENDIF}
+  {$ifdef windows}
+  windowslib,
+  {$endif}
   SysUtils,
   Classes,
   fphttpserver,
   fphttpclient,
   ssockets,
-  fpmimetypes,
   httpdefs,
   regexpr,
   lclintf,
@@ -33,8 +36,6 @@ type
   private
     FBaseDir: string;
     FCount: integer;
-    FMimeLoaded: boolean;
-    FMimeTypesFile: string;
     FWikiFile: string;
     FBackupDir: string;
     FUser: string;
@@ -54,8 +55,6 @@ type
     StopURI = '/twexe/api/exitserver';
 
   protected
-    procedure CheckMimeLoaded;
-    property MimeLoaded: boolean read FMimeLoaded;
     function ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
     function FindFileForURI(const URI: string; var FN: string): boolean;
     procedure StartServerSocket; override;
@@ -69,7 +68,6 @@ type
     constructor Create;
 
     property BaseDir: string read FBaseDir write SetBaseDir;
-    property MimeTypesFile: string read FMimeTypesFile write FMimeTypesFile;
     property SavingConfigUpdated: boolean read FSavingConfigUpdated
       write FSavingConfigUpdated;
     property URL: string read FURL write FURL;
@@ -170,16 +168,6 @@ begin
   FBaseDir := AValue;
   if (FBaseDir <> '') then
     FBaseDir := IncludeTrailingPathDelimiter(FBaseDir);
-end;
-
-//Make sure mime data is loaded
-procedure TTwexeHTTPServer.CheckMimeLoaded;
-begin
-  if (not MimeLoaded) and (MimeTypesFile <> '') then
-  begin
-    MimeTypes.LoadFromFile(MimeTypesFile);
-    FMimeLoaded := True;
-  end;
 end;
 
 // Find file for the specified URI, by first looking in the
@@ -357,8 +345,7 @@ begin
   begin
     F := TFileStream.Create(FN, fmOpenRead);
     try
-      CheckMimeLoaded;
-      AResponse.ContentType := MimeTypes.GetMimeType(ExtractFileExt(FN));
+      AResponse.ContentType := GetMimeType(ExtractFileExt(FN));
       Log('Serving file: ''' + Fn + '''. Type: ''' + AResponse.ContentType + '''.');
       //AResponse.ContentEncoding:='gzip';
       AResponse.ContentLength := F.Size;

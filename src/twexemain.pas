@@ -14,7 +14,6 @@ uses
   {$ENDIF}
   SysUtils,
   Classes,
-  fpmimetypes,
   httpdefs,
   regexpr,
   lclintf,
@@ -50,9 +49,6 @@ implementation
       Serv.BaseDir := GetServerDocPath();
 
       Serv.StopRequested := False;
-      {$ifdef unix}
-      Serv.MimeTypesFile := '/etc/mime.types';
-      {$endif}
       Serv.Threaded := False;
       Serv.Port := Port;
       //We put a newline in front because it is the first thing
