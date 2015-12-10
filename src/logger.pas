@@ -146,7 +146,7 @@ procedure Show(const Msg: string; const NewLine:boolean=True);
 Var
   S:string;
 begin
-  TextColor(DarkGray);
+  TextColor(White);
   S:=Indent(Msg,1,79);
   if (NewLine) then
     WriteLn(S)
@@ -166,10 +166,10 @@ begin
     NL:='';
     //If message has a line ending in the beginning
     //make sure we put it before the time/date
-    If (Length(Msg)>0) and (Msg[1]=LineEnding) then
+    If (Length(Msg)>0) and (Pos(LineEnding,Msg)=1) then
     begin
       NL := LineEnding;
-      Delete(S,1,1);
+      Delete(S,1,Length(LineEnding));
     end;
     TS:=FormatDateTime(' [ ddd. hh:mm:ss ] - ',Now);
     TextColor(green);

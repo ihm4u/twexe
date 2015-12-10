@@ -8,8 +8,8 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Classes, SysUtils, CustApp
-  { you can add units after this }
-  ,logger, twexemain, HTTPDefs, fphttpclient
+  { twexe units }
+  ,logger, twexemain, exedata
   ;
 
 type
@@ -114,7 +114,6 @@ end;
 
 procedure TTwexeApp.WriteHelp;
 begin
-  { add your help code here }
   writeln('Usage: ',ExeName,' -h');
 end;
 
