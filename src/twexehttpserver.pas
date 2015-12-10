@@ -198,8 +198,7 @@ begin
         try
           TmpWikiFN := ExtractFilePath(FN) + '_orig_' + ExtractFileName(FN);
           fileops.MoveFile(FN, TmpWikiFN);
-          //FIXME: This should update saving config only if twexe is found
-          SavingConfigUpdated := EnsureTwexeSavingConfig(TmpWikiFN, FN, Port);
+          SavingConfigUpdated := UpdateWikiSavingConfig(TmpWikiFN, FN, Port,woIfTwexe);
           DeleteFile(TmpWikiFN);
         except
           on E: Exception do

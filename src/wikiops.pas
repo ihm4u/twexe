@@ -195,14 +195,19 @@ implementation
        or (Pos(PasswordChk,S)<>0) //We have the section for password check
        then
     begin
-      //Go ahead and do all the regex checking 
+      //The check for empty password (for automatic save)
+      //is done only if the wiki name is not twexe
+      //(in the saving tab of the wikis control panel)
+      ReplaceWantPassword(S);
+      //Add saving config if wiki doesnt have any
+      MaybeAddSavingConfig(S,PortStr,When);
+
+      //Go ahead and do all the regex checking
       //if woAlways was specified
       if When = woAlways then
       begin
-        ReplaceWantPassword(S);
         ReplaceUploadName(S,When);
         ReplaceUploadURL(S,PortStr,When);
-        MaybeAddSavingConfig(S,PortStr,When);
       end
       else
       begin
@@ -210,10 +215,8 @@ implementation
         //uploadName tiddler and the caller specified woIfTwexe
         If (When = woIfTwexe) and HasTwexeUploadName(S) then
         begin
-          ReplaceWantPassword(S);
           ReplaceUploadName(S,When);
           ReplaceUploadURL(S,PortStr,When);
-          MaybeAddSavingConfig(S,PortStr,When);
         end;
       end;
     end;
