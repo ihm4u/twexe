@@ -359,7 +359,7 @@ begin
     try
       CheckMimeLoaded;
       AResponse.ContentType := MimeTypes.GetMimeType(ExtractFileExt(FN));
-      Log('Serving file: ''' + Fn + '''. Type: ' + AResponse.ContentType);
+      Log('Serving file: ''' + Fn + '''. Type: ''' + AResponse.ContentType + '''.');
       //AResponse.ContentEncoding:='gzip';
       AResponse.ContentLength := F.Size;
       AResponse.ContentStream := F;
