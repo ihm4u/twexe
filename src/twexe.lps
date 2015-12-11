@@ -60,8 +60,9 @@
       <Unit2>
         <Filename Value="twexemain.pas"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <TopLine Value="141"/>
-        <CursorPos X="37" Y="150"/>
+        <CursorPos X="52" Y="153"/>
         <UsageCount Value="144"/>
         <Loaded Value="True"/>
       </Unit2>
@@ -110,7 +111,6 @@
       <Unit8>
         <Filename Value="logger.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="10"/>
         <TopLine Value="135"/>
         <CursorPos X="17" Y="152"/>

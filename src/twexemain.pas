@@ -149,7 +149,7 @@ implementation
       if WikiName <> NewName then
       begin
         Log('Renaming '''+WikiName+''' to '''+NewName+'''.');
-        fileops.MoveFile(WikiName,NewName);
+        fileops.MoveFile(WikiName,NewName,True);
       end;
     except
       on E:Exception do
