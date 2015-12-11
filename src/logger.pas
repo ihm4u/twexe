@@ -46,10 +46,10 @@ procedure Error(const Msg: string);
 
 implementation
 
+{$ifdef windows}
 var
-  {$ifdef windows}
   TextAttr: Word = $07;
-  {$endif}
+{$endif}
 
 {$ifdef unix}
 procedure TextColor(const Color: byte);
@@ -173,7 +173,12 @@ procedure Show(const Msg: string; const NewLine: boolean = True);
 var
   S: string;
 begin
+  {$ifdef windows}
   TextColor(White);
+  {$endif}
+  {$ifdef unix}
+  ResetColors();
+  {$endif}
   S := Indent(Msg, 1, 79);
   if (NewLine) then
     WriteLn(S)
