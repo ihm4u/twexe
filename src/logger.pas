@@ -7,10 +7,10 @@ interface
 uses
   SysUtils, syncobjs
   {$ifdef windows}
-  , crt
+  ,windows
   {$endif};
 
-{$ifdef unix}
+{{$ifdef unix}}
 { Sadly we could not use the Crt unit under unix, even though
   it showed the right colors, because it would send spurious
   codes to the terminal and change the cursor position when
@@ -33,7 +33,7 @@ const
   LightMagenta = 13;
   Yellow = 14;
   White = 15;
-{$endif}
+{{$endif}}
 
 var
   LogVerbose: boolean;
@@ -47,7 +47,10 @@ procedure Error(const Msg: string);
 implementation
 
 var
-  CSConsole: TCriticalSection;
+  CSConsole: syncobjs.TCriticalSection;
+  {$ifdef windows}
+  TextAttr: Word = $07;
+  {$endif}
 
 procedure AcquireLock;
 begin
@@ -117,12 +120,33 @@ begin
 end;
 
 {$endif}
+{$ifdef windows}
+procedure WriteAttr(const TAttr:word);
+begin
+  SetConsoleTextAttribute(GetStdhandle(STD_OUTPUT_HANDLE),TAttr);
+end;
+
+procedure TextColor(const Color: byte);
+begin
+   TextAttr:=(Color and $8f) or (TextAttr and $70);
+   WriteAttr(TextAttr);
+end;
+
+procedure TextBackground(const Color: byte);
+Const
+  Blink = 128; //Could be added to color, but we dont expose it
+begin
+  TextAttr:=((Color shl 4) and ($f0 and not Blink))
+    or (TextAttr and ($0f OR Blink) );
+  WriteAttr(TextAttr);
+end;
+{$endif}
 
 procedure ResetColors();
 begin
   {$ifdef windows}
-  TextColor(White);
-  TextBackground(Black);
+  TextAttr:=$07;
+  WriteAttr(TextAttr);
   {$endif}
 
   {$ifdef unix}
@@ -215,7 +239,7 @@ begin
 end;
 
 initialization
-  CSConsole := TCriticalSection.Create;
+  CSConsole := syncobjs.TCriticalSection.Create;
 
 finalization
   CSConsole.Destroy;
