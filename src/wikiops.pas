@@ -64,20 +64,20 @@ implementation
     Result:=False;
     WikiName := '';
     Path := ConcatPaths([Dir,'*']);
-	 If FindFirst(Path,faAnyFile,Info)=0 then
-	 begin
-		Repeat
-         FullName := ConcatPaths([Dir,Info.Name]);
-         IsWiki := IsWikiFile(FullName);
-		Until (FindNext(info)<>0) or IsWiki;
-      If IsWiki then
-      begin
-        Log('Found wikifile: '+Info.Name);
-        WikiName:=FullName;
-        Result:=True;
-      end;
-	 end;
-	 FindClose(Info);
+    If FindFirst(Path,faAnyFile,Info)=0 then
+    begin
+     Repeat
+       FullName := ConcatPaths([Dir,Info.Name]);
+       IsWiki := IsWikiFile(FullName);
+     Until (FindNext(info)<>0) or IsWiki;
+     If IsWiki then
+     begin
+       Log('Found wikifile: '''+ExtractFileName(FullName)+'''.');
+       WikiName:=FullName;
+       Result:=True;
+     end;
+    end;
+    FindClose(Info);
   end;
 
   //Returns full path  of wiki file in unzipped directory
