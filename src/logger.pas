@@ -5,7 +5,7 @@ unit logger;
 interface
 
 uses
-  SysUtils, syncobjs
+  SysUtils
   {$ifdef windows}
   ,windows
   {$endif};
@@ -47,20 +47,9 @@ procedure Error(const Msg: string);
 implementation
 
 var
-  CSConsole: syncobjs.TCriticalSection;
   {$ifdef windows}
   TextAttr: Word = $07;
   {$endif}
-
-procedure AcquireLock;
-begin
-  CSConsole.Acquire;
-end;
-
-procedure ReleaseLock;
-begin
-  CSConsole.Release;
-end;
 
 {$ifdef unix}
 procedure TextColor(const Color: byte);
@@ -184,18 +173,13 @@ procedure Show(const Msg: string; const NewLine: boolean = True);
 var
   S: string;
 begin
-  AcquireLock;
-  try
-    TextColor(White);
-    S := Indent(Msg, 1, 79);
-    if (NewLine) then
-      WriteLn(S)
-    else
-      Write(S);
-    ResetColors();
-  finally
-    ReleaseLock;
-  end;
+  TextColor(White);
+  S := Indent(Msg, 1, 79);
+  if (NewLine) then
+    WriteLn(S)
+  else
+    Write(S);
+  ResetColors();
 end;
 
 procedure Log(const Msg: string);
@@ -205,25 +189,20 @@ var
 begin
   if (LogVerbose) then
   begin
-    AcquireLock;
-    try
-      S := Msg;
-      NL := '';
-      //If message has a line ending in the beginning
-      //make sure we put it before the time/date
-      if (Length(Msg) > 0) and (Pos(LineEnding, Msg) = 1) then
-      begin
-        NL := LineEnding;
-        Delete(S, 1, Length(LineEnding));
-      end;
-      TS := FormatDateTime(' [ ddd. hh:mm:ss ] - ', Now);
-      TextColor(green);
-      S := Indent(S, Length(TS), 77);
-      WriteLn(NL + TS + S);
-      ResetColors();
-    finally
-      ReleaseLock;
+    S := Msg;
+    NL := '';
+    //If message has a line ending in the beginning
+    //make sure we put it before the time/date
+    if (Length(Msg) > 0) and (Pos(LineEnding, Msg) = 1) then
+    begin
+      NL := LineEnding;
+      Delete(S, 1, Length(LineEnding));
     end;
+    TS := FormatDateTime(' [ ddd. hh:mm:ss ] - ', Now);
+    TextColor(green);
+    S := Indent(S, Length(TS), 77);
+    WriteLn(NL + TS + S);
+    ResetColors();
   end;
 end;
 
@@ -237,20 +216,10 @@ procedure Error(const Msg: string);
 const
   HDR = 'ERROR: ';
 begin
-  AcquireLock;
-  try
-    TextBackground(Red);
-    TextColor(Yellow);
-    WriteLn(HDR + Indent(Msg, Length(HDR), 77));
-    ResetColors();
-  finally
-    ReleaseLock;
-  end;
+  TextBackground(Red);
+  TextColor(Yellow);
+  WriteLn(HDR + Indent(Msg, Length(HDR), 77));
+  ResetColors();
 end;
 
-initialization
-  CSConsole := syncobjs.TCriticalSection.Create;
-
-finalization
-  CSConsole.Destroy;
 end.

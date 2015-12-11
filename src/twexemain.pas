@@ -40,7 +40,7 @@ implementation
     DoNotWaitForUser:boolean;
     FFileArgs : array of string;
     Serv: TTwexeHTTPServer;
-    StoreReqFinished,StopRequested: boolean;
+    StoreReqFinished,StopRequested,Restarting: boolean;
 
   function TryPort(Port: word; var TryAgain:boolean; var StoreReqDone:boolean): TTwexeHTTPServer;
   var
@@ -53,7 +53,7 @@ implementation
       Serv.BaseDir := GetServerDocPath();
 
       Serv.StopRequested := False;
-      Serv.Threaded := True;
+      Serv.Threaded := False;
       Serv.Port := Port;
       TryAgain := True;
       StoreReqDone := False;
@@ -205,6 +205,7 @@ implementation
       FreeAndNil(Serv);
 
     RunCmd(GetEXEFile()+Opts,Out,True);
+    Restarting := True;
     //Ignore WaitForUser() if somebody calls
     //it after having run RestartEXE()
     DoNotWaitForUser:=True;
@@ -258,6 +259,7 @@ begin
   LogDebug := 0;
   Twixie := '';
   DoNotWaitForUser:=False;
+  Restarting := False;
 
   FOpenBrowser := OpenBrowser;
   Exedata.OriginalExeFile := OrigExeFile;
@@ -326,6 +328,10 @@ begin
       Exit;
     end;
   end;
+
+  //Leave quickly if we are restarting
+  If Restarting then
+    Exit;
 
   //Extract data bundled in executable
   try

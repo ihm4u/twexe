@@ -46,7 +46,6 @@ type
     FURL: string;
     FSavingConfigUpdated: boolean;
     FOpenBrowser, FStopRequested, FStoreRequestDone: boolean;
-    CSCriticalReq: TCriticalSection;
 
     procedure SetBaseDir(const AValue: string);
     procedure HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
@@ -70,7 +69,6 @@ type
     procedure HandleRequest(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse); override;
     constructor Create; //no override needed b/c there is no ctor in parent;
-    destructor Destroy; override;
 
     property BaseDir: string read FBaseDir write SetBaseDir;
     property SavingConfigUpdated: boolean read FSavingConfigUpdated
@@ -143,17 +141,8 @@ begin
   inherited;
 end;
 
-destructor TTwexeHTTPServer.Destroy;
-begin
-  If Assigned(CSCriticalReq) then
-    CSCriticalReq.Destroy;
-  inherited;
-end;
-
 procedure TTwexeHttpServer.StartServerSocket;
 begin
-  If Threaded then
-      CSCriticalReq := TCriticalSection.Create;
   InetServer.Bind;
   InetServer.Listen;
   HandleOnStartListening;
@@ -411,13 +400,8 @@ procedure TTwexeHTTPServer.HandleRequest(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
 begin
   Log('Method: ''' + ARequest.Method + ''' URI: ''' + ARequest.URI + '''');
-  //Handle critical requests that may change server state
-  CSCriticalReq.Acquire;
-  try
-    HandleCriticalReqs(ARequest,AResponse);
-  finally
-    CSCriticalReq.Release;
-  end;
+
+  HandleCriticalReqs(ARequest,AResponse);
 
   //Handle other requests
   if ARequest.Method = 'GET' then
