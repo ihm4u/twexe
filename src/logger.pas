@@ -184,13 +184,18 @@ procedure Show(const Msg: string; const NewLine: boolean = True);
 var
   S: string;
 begin
-  TextColor(White);
-  S := Indent(Msg, 1, 79);
-  if (NewLine) then
-    WriteLn(S)
-  else
-    Write(S);
-  ResetColors();
+  AcquireLock;
+  try
+    TextColor(White);
+    S := Indent(Msg, 1, 79);
+    if (NewLine) then
+      WriteLn(S)
+    else
+      Write(S);
+    ResetColors();
+  finally
+    ReleaseLock;
+  end;
 end;
 
 procedure Log(const Msg: string);
@@ -200,8 +205,8 @@ var
 begin
   if (LogVerbose) then
   begin
+    AcquireLock;
     try
-      AcquireLock;
       S := Msg;
       NL := '';
       //If message has a line ending in the beginning
@@ -232,10 +237,15 @@ procedure Error(const Msg: string);
 const
   HDR = 'ERROR: ';
 begin
-  TextBackground(Red);
-  TextColor(Yellow);
-  WriteLn(HDR + Indent(Msg, Length(HDR), 77));
-  ResetColors();
+  AcquireLock;
+  try
+    TextBackground(Red);
+    TextColor(Yellow);
+    WriteLn(HDR + Indent(Msg, Length(HDR), 77));
+    ResetColors();
+  finally
+    ReleaseLock;
+  end;
 end;
 
 initialization

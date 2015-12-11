@@ -25,6 +25,7 @@ uses
   httpdefs,
   regexpr,
   lclintf,
+  syncobjs,
 
   { Twexe units }
   exedata, logger, fileops, wikiops, textops;
@@ -45,13 +46,15 @@ type
     FURL: string;
     FSavingConfigUpdated: boolean;
     FOpenBrowser, FStopRequested, FStoreRequestDone: boolean;
+    CSCriticalReq: TCriticalSection;
 
     procedure SetBaseDir(const AValue: string);
     procedure HandleGetReq(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
     procedure HandleStoreReq(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
-
+    procedure HandleCriticalReqs(var ARequest: TFPHTTPConnectionRequest;
+      var AResponse: TFPHTTPConnectionResponse);
   const
     StopURI = '/twexe/api/exitserver';
 
@@ -66,7 +69,8 @@ type
     class function SendStopRequest(const BaseURL: string = ''): boolean;
     procedure HandleRequest(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse); override;
-    constructor Create;
+    constructor Create; //no override needed b/c there is no ctor in parent;
+    destructor Destroy; override;
 
     property BaseDir: string read FBaseDir write SetBaseDir;
     property SavingConfigUpdated: boolean read FSavingConfigUpdated
@@ -139,8 +143,17 @@ begin
   inherited;
 end;
 
+destructor TTwexeHTTPServer.Destroy;
+begin
+  If Assigned(CSCriticalReq) then
+    CSCriticalReq.Destroy;
+  inherited;
+end;
+
 procedure TTwexeHttpServer.StartServerSocket;
 begin
+  If Threaded then
+      CSCriticalReq := TCriticalSection.Create;
   InetServer.Bind;
   InetServer.Listen;
   HandleOnStartListening;
@@ -368,11 +381,12 @@ begin
   Inc(FCount);
 end;
 
-
-procedure TTwexeHTTPServer.HandleRequest(var ARequest: TFPHTTPConnectionRequest;
+procedure TTwexeHTTPServer.HandleCriticalReqs(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse);
 begin
-  Log('Method: ''' + ARequest.Method + ''' URI: ''' + ARequest.URI + '''');
+  {These are critical requests that may change the state of the server }
+  {and so run inside a critical section                                    }
+  //Stop server request
   if Arequest.URI = StopURI then
   begin
     AResponse.Code := 200;
@@ -380,17 +394,35 @@ begin
     AResponse.ContentType := 'text/plain';
     AResponse.SendContent;
     StopRequested := True;
+    Show('Stopping ''' + GetEXEName() + ''' on ' + Self.URL);
     Self.Active := False;
     exit;
   end;
-  if ARequest.Method = 'GET' then
-  begin
-    HandleGetReq(ARequest, AResponse);
-    Exit;
-  end;
+
+  //Store Wiki request
   if (ARequest.Method = 'POST') and (ARequest.URI = '/store') then
   begin
     HandleStoreReq(ARequest, AResponse);
+    Exit;
+  end;
+end;
+
+procedure TTwexeHTTPServer.HandleRequest(var ARequest: TFPHTTPConnectionRequest;
+  var AResponse: TFPHTTPConnectionResponse);
+begin
+  Log('Method: ''' + ARequest.Method + ''' URI: ''' + ARequest.URI + '''');
+  //Handle critical requests that may change server state
+  CSCriticalReq.Acquire;
+  try
+    HandleCriticalReqs(ARequest,AResponse);
+  finally
+    CSCriticalReq.Release;
+  end;
+
+  //Handle other requests
+  if ARequest.Method = 'GET' then
+  begin
+    HandleGetReq(ARequest, AResponse);
     Exit;
   end;
 end;
