@@ -10,7 +10,6 @@ uses
   ,windows
   {$endif};
 
-{{$ifdef unix}}
 { Sadly we could not use the Crt unit under unix, even though
   it showed the right colors, because it would send spurious
   codes to the terminal and change the cursor position when
@@ -33,7 +32,6 @@ const
   LightMagenta = 13;
   Yellow = 14;
   White = 15;
-{{$endif}}
 
 var
   LogVerbose: boolean;
@@ -205,6 +203,9 @@ begin
     end;
     TS := FormatDateTime(' [ ddd. hh:mm:ss ] - ', Now);
     TextColor(green);
+    //Change line ending to \n
+    S :=StringReplace(S,LineEnding,'\n',[rfReplaceAll]);
+    //Format it nicely
     S := Indent(S, Length(TS), 77);
     WriteLn(NL + TS + S);
     ResetColors();

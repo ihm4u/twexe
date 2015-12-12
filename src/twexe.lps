@@ -43,50 +43,49 @@
         <Filename Value="twexe.lpr"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="83"/>
+        <TopLine Value="99"/>
         <CursorPos X="43" Y="120"/>
-        <UsageCount Value="172"/>
+        <UsageCount Value="173"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="twexehttpserver.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
-        <TopLine Value="409"/>
-        <CursorPos X="115" Y="412"/>
-        <UsageCount Value="171"/>
+        <TopLine Value="401"/>
+        <CursorPos Y="413"/>
+        <UsageCount Value="172"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="twexemain.pas"/>
         <IsPartOfProject Value="True"/>
-        <TopLine Value="331"/>
-        <CursorPos X="16" Y="337"/>
-        <UsageCount Value="171"/>
+        <TopLine Value="281"/>
+        <CursorPos X="56" Y="291"/>
+        <UsageCount Value="172"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
         <Filename Value="wikiops.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="6"/>
-        <TopLine Value="139"/>
+        <TopLine Value="72"/>
         <CursorPos X="46" Y="72"/>
-        <UsageCount Value="171"/>
+        <UsageCount Value="172"/>
         <Loaded Value="True"/>
       </Unit3>
       <Unit4>
         <Filename Value="version.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="171"/>
+        <UsageCount Value="172"/>
       </Unit4>
       <Unit5>
         <Filename Value="exedata.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="2"/>
         <CursorPos X="43" Y="152"/>
-        <UsageCount Value="171"/>
+        <UsageCount Value="172"/>
         <Loaded Value="True"/>
       </Unit5>
       <Unit6>
@@ -95,7 +94,7 @@
         <EditorIndex Value="3"/>
         <TopLine Value="271"/>
         <CursorPos Y="292"/>
-        <UsageCount Value="171"/>
+        <UsageCount Value="172"/>
         <Loaded Value="True"/>
       </Unit6>
       <Unit7>
@@ -105,15 +104,16 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="171"/>
+        <UsageCount Value="172"/>
       </Unit7>
       <Unit8>
         <Filename Value="logger.pas"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="8"/>
-        <TopLine Value="169"/>
-        <CursorPos X="15" Y="181"/>
-        <UsageCount Value="171"/>
+        <TopLine Value="198"/>
+        <CursorPos X="23" Y="208"/>
+        <UsageCount Value="172"/>
         <Loaded Value="True"/>
       </Unit8>
       <Unit9>
@@ -122,7 +122,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="26"/>
         <CursorPos Y="42"/>
-        <UsageCount Value="171"/>
+        <UsageCount Value="172"/>
       </Unit9>
       <Unit10>
         <Filename Value="unixlib.pas"/>
@@ -130,7 +130,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="8"/>
         <CursorPos X="4" Y="17"/>
-        <UsageCount Value="171"/>
+        <UsageCount Value="172"/>
       </Unit10>
       <Unit11>
         <Filename Value="httpdefs.pp"/>
@@ -139,7 +139,7 @@
         <EditorIndex Value="5"/>
         <TopLine Value="21"/>
         <CursorPos X="45" Y="32"/>
-        <UsageCount Value="170"/>
+        <UsageCount Value="171"/>
         <Loaded Value="True"/>
       </Unit11>
       <Unit12>
@@ -148,7 +148,7 @@
         <EditorIndex Value="7"/>
         <TopLine Value="236"/>
         <CursorPos Y="248"/>
-        <UsageCount Value="171"/>
+        <UsageCount Value="172"/>
         <Loaded Value="True"/>
       </Unit12>
       <Unit13>
@@ -157,7 +157,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="276"/>
         <CursorPos X="6" Y="285"/>
-        <UsageCount Value="123"/>
+        <UsageCount Value="124"/>
       </Unit13>
       <Unit14>
         <Filename Value="C:/apps/lazarus/fpc/2.6.4/source/packages/fcl-net/src/ssockets.pp"/>
@@ -201,126 +201,126 @@
         <UsageCount Value="6"/>
       </Unit19>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="28">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="exedata.pas"/>
-        <Caret Line="31" Column="57" TopLine="19"/>
+        <Caret Line="231" Column="16" TopLine="214"/>
       </Position1>
       <Position2>
         <Filename Value="exedata.pas"/>
-        <Caret Line="125" Column="16" TopLine="107"/>
+        <Caret Line="30" Column="16" TopLine="19"/>
       </Position2>
       <Position3>
         <Filename Value="exedata.pas"/>
-        <Caret Line="231" Column="16" TopLine="214"/>
+        <Caret Line="149" Column="16" TopLine="129"/>
       </Position3>
       <Position4>
-        <Filename Value="exedata.pas"/>
-        <Caret Line="30" Column="16" TopLine="19"/>
+        <Filename Value="twexehttpserver.pas"/>
+        <Caret Line="426" Column="36" TopLine="408"/>
       </Position4>
       <Position5>
-        <Filename Value="exedata.pas"/>
-        <Caret Line="149" Column="16" TopLine="129"/>
+        <Filename Value="twexehttpserver.pas"/>
+        <Caret Line="421" Column="22" TopLine="411"/>
       </Position5>
       <Position6>
         <Filename Value="twexehttpserver.pas"/>
-        <Caret Line="426" Column="36" TopLine="408"/>
+        <Caret Line="187" TopLine="173"/>
       </Position6>
       <Position7>
-        <Filename Value="twexehttpserver.pas"/>
-        <Caret Line="421" Column="22" TopLine="411"/>
+        <Filename Value="exedata.pas"/>
+        <Caret Line="138" Column="18" TopLine="135"/>
       </Position7>
       <Position8>
-        <Filename Value="twexehttpserver.pas"/>
-        <Caret Line="187" TopLine="173"/>
+        <Filename Value="exedata.pas"/>
+        <Caret Line="146" Column="5" TopLine="134"/>
       </Position8>
       <Position9>
         <Filename Value="exedata.pas"/>
-        <Caret Line="138" Column="18" TopLine="135"/>
+        <Caret Line="138" Column="22" TopLine="133"/>
       </Position9>
       <Position10>
         <Filename Value="exedata.pas"/>
-        <Caret Line="146" Column="5" TopLine="134"/>
+        <Caret Line="153" Column="5" TopLine="145"/>
       </Position10>
       <Position11>
         <Filename Value="exedata.pas"/>
-        <Caret Line="138" Column="22" TopLine="133"/>
+        <Caret Line="163" Column="6" TopLine="143"/>
       </Position11>
       <Position12>
         <Filename Value="exedata.pas"/>
-        <Caret Line="153" Column="5" TopLine="145"/>
+        <Caret Line="157" Column="20" TopLine="141"/>
       </Position12>
       <Position13>
         <Filename Value="exedata.pas"/>
-        <Caret Line="163" Column="6" TopLine="143"/>
+        <Caret Line="171" Column="13" TopLine="159"/>
       </Position13>
       <Position14>
         <Filename Value="exedata.pas"/>
-        <Caret Line="157" Column="20" TopLine="141"/>
+        <Caret Line="161" Column="38" TopLine="152"/>
       </Position14>
       <Position15>
         <Filename Value="exedata.pas"/>
-        <Caret Line="171" Column="13" TopLine="159"/>
+        <Caret Line="163" Column="70" TopLine="154"/>
       </Position15>
       <Position16>
         <Filename Value="exedata.pas"/>
-        <Caret Line="161" Column="38" TopLine="152"/>
+        <Caret Line="172" Column="29" TopLine="162"/>
       </Position16>
       <Position17>
         <Filename Value="exedata.pas"/>
-        <Caret Line="163" Column="70" TopLine="154"/>
+        <Caret Line="173" Column="22" TopLine="158"/>
       </Position17>
       <Position18>
         <Filename Value="exedata.pas"/>
-        <Caret Line="172" Column="29" TopLine="162"/>
+        <Caret Line="166" Column="15" TopLine="156"/>
       </Position18>
       <Position19>
         <Filename Value="exedata.pas"/>
-        <Caret Line="173" Column="22" TopLine="158"/>
+        <Caret Line="176" Column="3" TopLine="163"/>
       </Position19>
       <Position20>
-        <Filename Value="exedata.pas"/>
-        <Caret Line="166" Column="15" TopLine="156"/>
-      </Position20>
-      <Position21>
-        <Filename Value="exedata.pas"/>
-        <Caret Line="176" Column="3" TopLine="163"/>
-      </Position21>
-      <Position22>
         <Filename Value="twexehttpserver.pas"/>
         <Caret Line="423" Column="36" TopLine="406"/>
-      </Position22>
-      <Position23>
+      </Position20>
+      <Position21>
         <Filename Value="twexehttpserver.pas"/>
         <Caret Line="425" Column="25" TopLine="413"/>
-      </Position23>
-      <Position24>
+      </Position21>
+      <Position22>
         <Filename Value="exedata.pas"/>
         <Caret Line="173" Column="16" TopLine="164"/>
-      </Position24>
-      <Position25>
+      </Position22>
+      <Position23>
         <Filename Value="exedata.pas"/>
         <Caret Line="176" Column="53" TopLine="166"/>
+      </Position23>
+      <Position24>
+        <Filename Value="twexehttpserver.pas"/>
+        <Caret Line="444" Column="26" TopLine="435"/>
+      </Position24>
+      <Position25>
+        <Filename Value="twexehttpserver.pas"/>
+        <Caret Line="64" Column="78" TopLine="59"/>
       </Position25>
       <Position26>
         <Filename Value="twexehttpserver.pas"/>
-        <Caret Line="444" Column="26" TopLine="435"/>
+        <Caret Line="428" Column="55" TopLine="418"/>
       </Position26>
       <Position27>
         <Filename Value="twexehttpserver.pas"/>
-        <Caret Line="64" Column="78" TopLine="59"/>
+        <Caret Line="412" Column="16" TopLine="409"/>
       </Position27>
       <Position28>
-        <Filename Value="twexehttpserver.pas"/>
-        <Caret Line="428" Column="55" TopLine="418"/>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="291" Column="51" TopLine="272"/>
       </Position28>
       <Position29>
-        <Filename Value="twexehttpserver.pas"/>
-        <Caret Line="412" Column="37" TopLine="410"/>
+        <Filename Value="logger.pas"/>
+        <Caret Line="183" Column="30" TopLine="169"/>
       </Position29>
       <Position30>
-        <Filename Value="twexehttpserver.pas"/>
-        <Caret Line="62" Column="15" TopLine="53"/>
+        <Filename Value="logger.pas"/>
+        <Caret Line="199" Column="8" TopLine="178"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>
@@ -352,7 +352,7 @@
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="logger.pas"/>
-        <Line Value="61"/>
+        <Line Value="59"/>
       </Item4>
       <Item5>
         <Kind Value="bpkSource"/>

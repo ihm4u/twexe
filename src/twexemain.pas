@@ -288,7 +288,7 @@ begin
         O:='';
         Twixie:=ChangeFileExt(WikiToConvert,GetOSEXEExt());
         ShowCongrats();
-        Show('Your new twixie: ' + Twixie);
+        Show(Format('Your new twixie: ''%S''',[Twixie]));
 
         //Open browser and server unless -n flag was specified
         If FOpenBrowser then
