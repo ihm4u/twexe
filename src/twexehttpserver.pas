@@ -61,7 +61,7 @@ type
     StopURI = '/twexe/api/exitserver';
     RunProcURI = '/twexe/api/runproc';
     StoreURI = '/store';
-    ProcTimeoutDef = 180; //Timeout in seconds for external runproc processes
+    ProcTimeoutDef = 13; //Default timeout in seconds for external runproc processes
 
   protected
     function ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
@@ -405,7 +405,8 @@ end;
 function TTwexeHTTPServer.HandleAPIReqs(var ARequest: TFPHTTPConnectionRequest;
   var AResponse: TFPHTTPConnectionResponse):boolean;
 var
-  OutStr,Cmd,Exe,Args,Input,ApiCall:string;
+  OutStr,Cmd,Exe,Args,Input,OutputF,ApiCall:string;
+  OutS:TFileStream;
   Timeout:Integer;
 begin
   Result:=False;
@@ -419,6 +420,7 @@ begin
       Exe := Trim(ARequest.QueryFields.Values['cmd']);
       Args := Trim(ARequest.QueryFields.Values['args']);
       Input := Trim(ARequest.QueryFields.Values['input']);
+      OutputF := Trim(ARequest.QueryFields.Values['output']);  //read this file to get output from executable
       Timeout := StrToIntDef(Trim(ARequest.QueryFields.Values['timeout']),ProcTimeoutDef);
     end
     else
@@ -427,6 +429,7 @@ begin
       Exe := ARequest.ContentFields.Values['cmd'];
       Args := ARequest.ContentFields.Values['args'];
       Input := ARequest.ContentFields.Values['input'];
+      OutputF := Trim(ARequest.ContentFields.Values['output']);
       Timeout := StrToIntDef(Trim(ARequest.ContentFields.Values['timeout']),ProcTimeoutDef);
     end;
 
@@ -444,6 +447,19 @@ begin
       OutStr:='';
       try
         RunCmd(Cmd,OutStr,False,Input,Timeout);
+        //Read output from file if specified in 'output' field
+        If Length(OutputF) >0 then //Read output file
+        begin
+          OutS:=TFileStream.Create(OutputF,fmOpenRead);
+          try
+            SetLength(OutStr,OutS.Size);
+            OutS.Read(OutStr[1],OutS.Size);
+            AResponse.ContentType:=GetMimeType(ExtractFileExt(OutputF));
+          finally
+            If Assigned(OutS) then
+              FreeAndNil(OutS);
+          end;
+        end;
         AResponse.Code := 200;
       except on E:Exception do
         begin

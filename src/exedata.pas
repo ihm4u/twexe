@@ -127,6 +127,13 @@ function RunCmd(const Cmd: string; var Output: string;
   const Async: boolean = False;
   const Input:string = '';
   const KillAfterNSeconds:Integer=-1): integer;
+const
+  {$ifdef windows}
+  EOFInd=#26+LineEnding;
+  {$endif}
+  {$ifdef unix}
+  EOFInd='';
+  {$endif}
 var
   Out: TStrings;
   AProcess: TProcess;
@@ -148,12 +155,17 @@ begin
 
     If not Async and ((Length(Input) > 0) or (KillAfterNSeconds>0)) then
     begin
-      AProcess.Options := AProcess.Options - [poWaitOnExit] + [poNoConsole];
+      AProcess.Options := AProcess.Options - [poWaitOnExit];// + [poNoConsole];
       AProcess.Execute;
       //Send input on stdin
       If (Length(Input) > 0) then
       begin
         Aprocess.Input.Write(Input[1],Length(Input));
+        If EOFInd <> '' then
+        begin
+          Aprocess.Input.Write(EOFInd[1],Length(EOFInd));
+          Log(Format('Wrote EOF after external proc input: %d bytes.',[Length(EOFInd)]));
+        end;
         AProcess.CloseInput;
       end;
 
@@ -171,9 +183,11 @@ begin
             AProcess.Terminate(1);
             Output := '';
             Terminated:=True;
-            Show(Format('External process ''%S'' timed out (%.1F secs).',
+            AProcess.Parameters.StrictDelimiter:=True;
+            AProcess.Parameters.Delimiter:=' ';
+            Show(Format('External process ''%S'' exceeded alloted time (used %.1F secs). Terminating it.',
               [FileNameNoExt(AProcess.Executable) + ' '
-               + TrimRight(Aprocess.Parameters.Text),
+               + Aprocess.Parameters.DelimitedText,
                RunningmSecs / 1000]));
           end;
         end;
