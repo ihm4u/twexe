@@ -18,7 +18,6 @@ type
 
   TTwexeApp = class(TCustomApplication)
   private
-    OpenBrowser: boolean;
     FileArgs: array of string;
     OrigExeFile: string;
 
@@ -42,7 +41,7 @@ Var
   ErrorMsg: string;
 begin
   //Default values
-  OpenBrowser := True;
+  twexemain.TwexeOptions := [toOpenBrowser];
 
   // parse options
   try
@@ -75,7 +74,7 @@ begin
 
     //Process n option
     if HasOption('n') then
-      OpenBrowser := False;
+      TwexeOptions := TwexeOptions - [toOpenBrowser];
 
   finally
     SetLength(FileArgs,NonOpts.Count);
@@ -92,10 +91,11 @@ end;
 procedure TTwexeApp.DoRun;
 begin
 
+  //Handle cmdline args, and set values in twexemain.Twexeoptions
   ProcessOptions();
 
-  { Run main function }
-  Twexemain.TwexeMain(OpenBrowser, OrigExeFile, FileArgs);
+  { Run main function - options have been written to twexeoptions in twexemain}
+  Twexemain.TwexeMain(OrigExeFile, FileArgs);
 
   // stop program loop
   Terminate;

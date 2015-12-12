@@ -29,14 +29,20 @@ uses
   ,Windows {for setconsoleoutputcp}
   {$endif};
 
-procedure TwexeMain(const OpenBrowser: boolean;
+type
+  TTwexeOption = (toOpenBrowser,toAllowRemoteClients);
+  TTwexeOptions = set of TTwexeOption;
+var
+  TwexeOptions : TTwexeOptions;
+
+procedure TwexeMain(
   const OrigExeFile: string;
   const FileArgs:array of string);
+
 procedure PrintHeader();
 
 implementation
   var
-    FOpenBrowser: boolean;
     DoNotWaitForUser:boolean;
     FFileArgs : array of string;
     Serv: TTwexeHTTPServer;
@@ -49,7 +55,7 @@ implementation
     Serv := TTwexeHTTPServer.Create;
     try
       //Server should open browser as soon as it is listening
-      Serv.OpenBrowser := FOpenBrowser;
+      Serv.OpenBrowser := (toOpenBrowser in TwexeOptions);
       Serv.BaseDir := GetServerDocPath();
 
       Serv.StopRequested := False;
@@ -247,7 +253,7 @@ begin
   end;
 end;
 
-procedure TwexeMain(const OpenBrowser: boolean;
+procedure TwexeMain(
   const OrigExeFile: string;
   const FileArgs:array of string);
   Var
@@ -261,7 +267,6 @@ begin
   DoNotWaitForUser:=False;
   Restarting := False;
 
-  FOpenBrowser := OpenBrowser;
   Exedata.OriginalExeFile := OrigExeFile;
   SetLength(FFileArgs,Length(FileArgs));
 
@@ -291,7 +296,7 @@ begin
         Show(Format('Your new twixie: ''%S''',[Twixie]));
 
         //Open browser and server unless -n flag was specified
-        If FOpenBrowser then
+        If toOpenBrowser in TwexeOptions then
         begin
           WaitForUser('Press enter to run your new twixie...');
           RunCmd(Twixie,O,True);
@@ -313,7 +318,7 @@ begin
     //finish, if we had to the case of a restart because
     //the shadow file was in use
     Sleep(200);
-    if not IAmShadow()and RunShadow(FOpenBrowser) then
+    if not IAmShadow()and RunShadow(toOpenBrowser in TwexeOptions) then
     begin
       Log('Exiting, shadow created and running.');
       Exit;
