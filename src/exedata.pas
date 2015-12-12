@@ -27,7 +27,9 @@ Var
   OriginalExeFile: string;
 
 //Executes command synchronously or asynchronously
-function RunCmd(const Cmd: string; var Output: string; const Async: boolean = False): integer;
+function RunCmd(const Cmd: string; var Output: string;
+  const Async: boolean = False; const Input: string = '';
+  const KillAfterNSeconds:Integer=-1): integer;
 
 //Return complete file name and path of the original executable (not shadow)
 function GetEXEFile():String;
@@ -121,26 +123,70 @@ end;
 //
 // Execute process
 //
-function RunCmd(const Cmd: string; var Output: string; const Async: boolean = False): integer;
+function RunCmd(const Cmd: string; var Output: string;
+  const Async: boolean = False;
+  const Input:string = '';
+  const KillAfterNSeconds:Integer=-1): integer;
 var
   Out: TStrings;
   AProcess: TProcess;
+  RunningmSecs:Integer;
+  Terminated:boolean;
 begin
   Result := -1;
+  Terminated := False;
   AProcess := TProcess.Create(nil);
   Out := TStringList.Create;
   try
     AProcess.CommandLine := Cmd;
+
     if Async then
       AProcess.Options := AProcess.Options // + [poNoConsole]
     else
       AProcess.Options := AProcess.Options + [poWaitOnExit, poUsePipes,
       poNoConsole, poStderrToOutPut];
 
-    AProcess.Execute;
+    If not Async and ((Length(Input) > 0) or (KillAfterNSeconds>0)) then
+    begin
+      AProcess.Options := AProcess.Options - [poWaitOnExit] + [poNoConsole];
+      AProcess.Execute;
+      //Send input on stdin
+      If (Length(Input) > 0) then
+      begin
+        Aprocess.Input.Write(Input[1],Length(Input));
+        AProcess.CloseInput;
+      end;
+
+      //If KillAfterNSeconds was specified, kill process
+      //if it has not ended after that number of seconds
+      RunningmSecs:=0;
+      If KillAfterNSeconds > 0 then
+      begin
+        While AProcess.Running and (RunningmSecs<KillAfterNSeconds*1000) do
+        begin
+          Sleep(50);
+          RunningmSecs+=50;
+          If RunningmSecs >= KillAfterNSeconds*1000 then
+          begin
+            AProcess.Terminate(1);
+            Output := '';
+            Terminated:=True;
+            Show(Format('External process ''%S'' timed out (%.1F secs).',
+              [FileNameNoExt(AProcess.Executable) + ' '
+               + TrimRight(Aprocess.Parameters.Text),
+               RunningmSecs / 1000]));
+          end;
+        end;
+      end
+      else //No KillAfterNSeconds;
+        AProcess.WaitOnExit;
+    end
+    else //No input and no KillAfterNSeconds
+      AProcess.Execute;
+
     Result:= 0;
 
-    if not Async then
+    if not Async and not Terminated then
     begin
       Out.BeginUpdate;
       Out.Clear;

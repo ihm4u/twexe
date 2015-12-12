@@ -54,8 +54,14 @@ type
       var AResponse: TFPHTTPConnectionResponse);
     procedure HandleCriticalReqs(var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
+    function  HandleAPIReqs(var ARequest: TFPHTTPConnectionRequest;
+      var AResponse: TFPHTTPConnectionResponse):boolean;
+
   const
     StopURI = '/twexe/api/exitserver';
+    RunProcURI = '/twexe/api/runproc';
+    StoreURI = '/store';
+    ProcTimeoutDef = 180; //Timeout in seconds for external runproc processes
 
   protected
     function ParseUploadPlugin(const ARequest: TFPHTTPConnectionRequest): boolean;
@@ -84,6 +90,7 @@ type
 implementation
 
 { Utilities }
+
 procedure StoreLastURL(const URL: string);
 var
   UFile: Text;
@@ -374,7 +381,6 @@ procedure TTwexeHTTPServer.HandleCriticalReqs(var ARequest: TFPHTTPConnectionReq
   var AResponse: TFPHTTPConnectionResponse);
 begin
   {These are critical requests that may change the state of the server }
-  {and so run inside a critical section                                    }
   //Stop server request
   if Arequest.URI = StopURI then
   begin
@@ -389,10 +395,68 @@ begin
   end;
 
   //Store Wiki request
-  if (ARequest.Method = 'POST') and (ARequest.URI = '/store') then
+  if (ARequest.Method = 'POST') and (ARequest.URI = StoreURI) then
   begin
     HandleStoreReq(ARequest, AResponse);
     Exit;
+  end;
+end;
+
+function TTwexeHTTPServer.HandleAPIReqs(var ARequest: TFPHTTPConnectionRequest;
+  var AResponse: TFPHTTPConnectionResponse):boolean;
+var
+  OutStr,Cmd,Exe,Args,Input,ApiCall:string;
+  Timeout:Integer;
+begin
+  Result:=False;
+  ApiCall:=LeftStr(ARequest.URI, Length(RunProcURI));
+  if ApiCall = RunProcURI then
+  begin
+    Result:=True;
+    //Get the executable, arguments, input and timeout from the request
+    if (ARequest.Method = 'GET') then
+    begin
+      Exe := Trim(ARequest.QueryFields.Values['cmd']);
+      Args := Trim(ARequest.QueryFields.Values['args']);
+      Input := Trim(ARequest.QueryFields.Values['input']);
+      Timeout := StrToIntDef(Trim(ARequest.QueryFields.Values['timeout']),ProcTimeoutDef);
+    end
+    else
+    if (ARequest.Method = 'POST') then
+    begin
+      Exe := ARequest.ContentFields.Values['cmd'];
+      Args := ARequest.ContentFields.Values['args'];
+      Input := ARequest.ContentFields.Values['input'];
+      Timeout := StrToIntDef(Trim(ARequest.ContentFields.Values['timeout']),ProcTimeoutDef);
+    end;
+
+    Cmd := Exe + ' ' + Args;
+
+    Log(Format('Running ''%S'' with %D bytes of input; timeout of %D secs.',
+      [TrimRight(Cmd),Length(input),Timeout]));
+    If Exe = '' then
+    begin //Cmd field empty
+      AResponse.Code:=404;
+      AResponse.SendContent;
+    end
+    else //Cmd field is not empty
+    begin
+      OutStr:='';
+      try
+        RunCmd(Cmd,OutStr,False,Input,Timeout);
+        AResponse.Code := 200;
+      except on E:Exception do
+        begin
+          Log('External process exception: ' + E.toString);
+          AResponse.Code := 500;
+        end;
+      end;
+
+      Log(Format('''%S'' output: ''%S''',
+        [FileNameNoExt(Exe), OutStr]));
+      AResponse.Content := OutStr;
+      AResponse.SendContent;
+    end;
   end;
 end;
 
@@ -401,7 +465,12 @@ procedure TTwexeHTTPServer.HandleRequest(var ARequest: TFPHTTPConnectionRequest;
 begin
   Log('Method: ''' + ARequest.Method + ''' URI: ''' + ARequest.URI + '''');
 
+  //Handle store and stop server requests
   HandleCriticalReqs(ARequest,AResponse);
+
+  //Handle API requests, like runproc
+  if HandleAPIReqs(ARequest,AResponse) then
+    Exit;
 
   //Handle other requests
   if ARequest.Method = 'GET' then
