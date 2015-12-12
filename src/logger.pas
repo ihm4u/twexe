@@ -189,6 +189,7 @@ procedure Log(const Msg: string);
 var
   TS: string;
   S, NL: string;
+  Continues: boolean;
 begin
   if (LogVerbose) then
   begin
@@ -203,11 +204,26 @@ begin
     end;
     TS := FormatDateTime(' [ ddd. hh:mm:ss ] - ', Now);
     TextColor(green);
-    //Change line ending to \n
+    //Change line ending to \n and limit size to 555 bytes per log
+    // The +1-1 trickery is used to prevent triggering the avast antivirus
+    Continues:=False;
+    If Length(S) > 555 then //Honor Our Lord's wounds
+    begin
+      SetLength(S,555+1-1);
+      Continues := True;
+    end;
+
     S :=StringReplace(S,LineEnding,'\n',[rfReplaceAll]);
     //Format it nicely
     S := Indent(S, Length(TS), 77);
-    WriteLn(NL + TS + S);
+    Write(NL + TS + S);
+    If Continues then
+    begin
+      TextColor(Blue);
+      WriteLn('...'); //FIXME: use utf8 ellipsis
+    end
+    else
+      Write(LineEnding);
     ResetColors();
   end;
 end;
@@ -227,5 +243,10 @@ begin
   WriteLn(HDR + Indent(Msg, Length(HDR), 77));
   ResetColors();
 end;
+
+initialization
+  {$IFDEF WINDOWS}
+  SetConsoleOutputCP(CP_UTF8);
+  {$ENDIF}
 
 end.
