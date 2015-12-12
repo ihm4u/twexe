@@ -287,12 +287,10 @@ begin
     PostedFile := ARequest.Files[0].LocalFileName;
     FWikiFile := ConcatPaths([GetStoragePath(), '_pst', ExeName + '.html']);
     OK := MoveFile(PostedFile, FWikiFile, True);
+
     if OK then
     begin
       OK := False;
-      //Append received wiki to executable
-      AppendFile(GetEXEFile(), FWikiFile);
-
       //Make backup in specified Backup Dir
       //If not absolute, backup dir is in reference
       //to GetEXEPath() - the path of the twixie file.
@@ -301,8 +299,11 @@ begin
       else if FBackupDir[Length(FBackupDir)] <> DirectorySeparator then
         FBackupDir := ConcatPaths([GetEXEPath(), FBackupDir]);
 
-      BakFile := ConcatPaths([FBackupDir, ExeName + '.html']);
-      OK := MakeBackup(FWikiFile, BakFile);
+      BakFile := ConcatPaths([FBackupDir, ExeName + GetOSEXEExt()]);
+      OK := MakeBackup(GetEXEFile(), BakFile);
+
+      //Append received wiki to executable
+      AppendFile(GetEXEFile(), FWikiFile);
 
       { **************************************************************************
         **  This code may be used later to move file to upload dir, but for now we

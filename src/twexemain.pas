@@ -309,7 +309,11 @@ begin
   try
     //Run shadow and exit,
     //continue if we're not the shadow
-    if RunShadow(FOpenBrowser) then
+    //We sleep a little bit to let previous executable
+    //finish, if we had to the case of a restart because
+    //the shadow file was in use
+    Sleep(200);
+    if not IAmShadow()and RunShadow(FOpenBrowser) then
     begin
       Log('Exiting, shadow created and running.');
       Exit;
@@ -344,8 +348,10 @@ begin
 
   try
     try
-      //Start HTTP server
-      Sleep(200); //Wait a little to give time for previous exe to end
+      //Start HTTP server and wait
+      //a little to give a little time for the previous exe
+      //to finish properly (this is needed in addition to the shadow sleep)
+      Sleep(200);
       Serv:=StartServer();
       //FIXME: Cleanup temp files: shadow _exes in tmp, unzip dir
       If StoreReqFinished and not StopRequested then
