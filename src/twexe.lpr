@@ -49,7 +49,7 @@ begin
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('sz:hk',[],Opts,NonOpts);
+    ErrorMsg:=CheckOptions('vsz:hk',[],Opts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -108,6 +108,14 @@ begin
     Exit;
   end;
 
+  //Print header (includes version number)
+  If HasOption('v','') then
+  begin
+    PrintHeader();
+    Terminate;
+    Exit;
+  end;
+
   { Run main function - options have been written to twexeoptions in twexemain}
   Twexemain.TwexeMain(OrigExeFile, FileArgs);
 
@@ -159,6 +167,13 @@ begin
   TextColor(DarkGray);
   writeln(#9,#9,Format('Write html wiki file to ''%s''.'
     ,[GetEXEName()+'.html']));
+
+    TextColor(Blue);
+  writeln(#9,'-v');
+  TextColor(DarkGray);
+  writeln(#9,#9,Format('Print version number and exit.'
+    ,[GetEXEName()+'.html']));
+
   ResetColors();
 
 end;
