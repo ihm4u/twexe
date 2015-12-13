@@ -252,7 +252,7 @@ begin
   If OpenBrowser then
     Opts:=''
   else
-    Opts:=' -n';
+    Opts:=' -s';
 
   //Copy executable to shadow file
   NewExe := GetShadowFile();

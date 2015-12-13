@@ -25,7 +25,6 @@ uses
   httpdefs,
   regexpr,
   lclintf,
-  syncobjs,
 
   { Twexe units }
   exedata, logger, fileops, wikiops, textops;
@@ -145,6 +144,7 @@ constructor TTwexeHTTPServer.Create;
 begin
   StopRequested := False;
   StoreRequestDone := False;
+  Address:='127.0.0.1';
   inherited;
 end;
 
