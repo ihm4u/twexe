@@ -1,4 +1,11 @@
-IF shadow server is already running should we kill it ans restart?
-Mime types under windows
 
+*(done) IF shadow server is already running should we kill it ans restart?
+*(done) ime types under windows
+
+Options:
+* Backup html file instead of exe?
+* Allow remote serving
+* Allow remote procrun's 
+* Number of backups to allow
+* Default timeout value for procruns
 

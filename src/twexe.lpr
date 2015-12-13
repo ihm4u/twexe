@@ -49,7 +49,7 @@ begin
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('nz:h',[],Opts,NonOpts);
+    ErrorMsg:=CheckOptions('sz:hk',[],Opts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -72,8 +72,8 @@ begin
       Exit;
     end;
 
-    //Process n option
-    if HasOption('n') then
+    //Process s option
+    if HasOption('s') then
       TwexeOptions := TwexeOptions - [toOpenBrowser];
 
   finally
@@ -93,6 +93,20 @@ begin
 
   //Handle cmdline args, and set values in twexemain.Twexeoptions
   ProcessOptions();
+
+  If Terminated then
+    Exit;
+
+  //Write html tiddlywiki file
+  If HasOption('k','') then
+  begin
+    PrintHeader();
+    Show('Extracting tiddlywiki5 html file.');
+    ExtractData(GetEXEFile(),GetEXEPath());
+    Show('Tiddlywiki written in directory ''' + GetEXEPath() + '''.');
+    Terminate;
+    Exit;
+  end;
 
   { Run main function - options have been written to twexeoptions in twexemain}
   Twexemain.TwexeMain(OrigExeFile, FileArgs);
@@ -114,7 +128,39 @@ end;
 
 procedure TTwexeApp.WriteHelp;
 begin
-  writeln('Usage: ',ExeName,' -h');
+  Write('Usage: ');
+  TextColor(Blue); Write(FileNameNoExt(ExeName));
+  TextColor(Yellow);Writeln(' [options] [file]');
+  ResetColors();
+  Writeln();
+  Writeln('  This file is a twixie, a single file tiddlywiki5 executable.');
+  Writeln();
+  Writeln('  If you run it with no file specified, it will open the browser');
+  Writeln('  and serve the tiddlywiki5 file.');
+  Writeln();
+  Writeln('  If a file is specified, and it is a TiddlyWiki5 file, then');
+  Writeln('  convert it into a twixie with the same file name as the ');
+  Writeln('  specified file.');
+  Writeln();
+  TextColor(Blue);
+  writeln('OPTIONS:');
+  writeln(#9,'-h');
+  TextColor(DarkGray);
+  writeln(#9,#9,'Print this help information.');
+
+  TextColor(Blue);
+  writeln(#9,'-s');
+  TextColor(DarkGray);
+  writeln(#9,#9,'Do not open browser.');
+  ResetColors();
+
+  TextColor(Blue);
+  writeln(#9,'-k');
+  TextColor(DarkGray);
+  writeln(#9,#9,Format('Write html wiki file to ''%s''.'
+    ,[GetEXEName()+'.html']));
+  ResetColors();
+
 end;
 
 var

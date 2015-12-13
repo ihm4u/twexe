@@ -41,6 +41,8 @@ procedure Show(const Msg: string; const NewLine: boolean = True);
 procedure Log(const Msg: string);
 procedure Dbg(const Msg: string; const Level: integer = 1);
 procedure Error(const Msg: string);
+procedure TextColor(const Color: byte);
+procedure ResetColors();
 
 implementation
 

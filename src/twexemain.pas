@@ -128,15 +128,17 @@ implementation
     { Ivrit ascii font from:                                     }
     {http://patorjk.com/software/taag/#p=display&f=Ivrit&t=TWEXE }
     WriteLn();
-    Show(' _______        _________  _______  ');
-    Show('|_   _\ \      / / ____\ \/ / ____| ');
-    Show('  | |  \ \ /\ / /|  _|  \  /|  _|   ');
-    Show('  | |   \ V  V / | |___ /  \| |___  ');
-    Show('  |_|    \_/\_/  |_____/_/\_\_____| ');
-    Show('  Single File TiddlyWiki executable ');
-    Show('  Version: '+_VERSION);
-    Show('------------------------------------');
-    Show('                                    ');
+    TextColor(Blue);
+    WriteLn(' _______        _________  _______  ');
+    WriteLn('|_   _\ \      / / ____\ \/ / ____| ');
+    WriteLn('  | |  \ \ /\ / /|  _|  \  /|  _|   ');
+    WriteLn('  | |   \ V  V / | |___ /  \| |___  ');
+    WriteLn('  |_|    \_/\_/  |_____/_/\_\_____| ');
+    WriteLn('  Single File TiddlyWiki executable ');
+    WriteLn('  Version: '+_VERSION);
+    WriteLn('------------------------------------');
+    WriteLn('                                    ');
+    ResetColors();
   end;
 
   //Extract data or abort
@@ -200,7 +202,7 @@ implementation
 
     Out := '';
     //Restart executable without opening the browser
-    Opts := ' -n';
+    Opts := ' -s';
 
     If StartBrowser then
       Opts := '';

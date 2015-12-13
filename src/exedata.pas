@@ -35,7 +35,7 @@ function RunCmd(const Cmd: string; var Output: string;
 function GetEXEFile():String;
 
 //Extract appended zip file in the executable
-procedure ExtractData(ExeFile: string = ''; Delete: boolean = False);
+procedure ExtractData(ExeFile:string; const Dir: string=''; Delete: boolean = False);
 
 //Compress data and append it to specified executable
 procedure AppendFile(const ExeFile:string; const DataFile: string);
@@ -325,10 +325,11 @@ end;
 //
 // Extract ZIP file contained in the executable
 //
-procedure ExtractData(ExeFile:string; Delete: boolean = False);
+procedure ExtractData(ExeFile:string; const Dir: string=''; Delete: boolean = False);
 var
   UnZipper: TUnZipper;
   CB: TCallacks;
+  FDir: string;
 
 begin
   //Error if ExeFile does not exist
@@ -339,12 +340,15 @@ begin
   end;
 
   //Extract zipped data from file
+  FDir := Dir;
+  If Dir='' then
+    FDir := GetUnZipPath();
   CB := TCallacks.Create;
   UnZipper := TUnZipper.Create;
   UnZipper.OnOpenInputStream := @CB.OnOpenZippedStream;
   try
     UnZipper.FileName := ExeFile;
-    UnZipper.OutputPath := GetUnZipPath();
+    UnZipper.OutputPath := FDir;
     UnZipper.UnZipAllFiles;
     Log('Extracted data in ' + UnZipper.OutputPath + ' from ' + ExeFile);
   finally

@@ -1,10 +1,11 @@
 BINARY=twexe
-SRCFILES=src/*.pas src/*.pp src/version.pas
+LPI=src/twexe.lpi
+SRCFILES=src/*.pas src/*.pp src/version.pas src/twexe.lpr
 SRC=src/twexe.pas
 EMPTY_TW5=src/empty.html
 
-PRODOPTS=
-DBGOPTS=#-g
+X86_64_LINUX=-B --os=linux --cpu=x86_64
+PROD=yes
 
 THISARCH=x86_64-linux
 ARCHES=x86_64-linux #win32
@@ -22,16 +23,18 @@ all: $(EXES)
 
 build/x86_64-linux/$(BINARY): $(SRCFILES)
 	@mkdir -p $(@D)
-	if [ "$$PROD" = "yes" ]; then \
-		fpc -FE$(@D) $(PRODOPTS) -Tlinux $(SRC); \
+	if [ "$(PROD)" = "yes" ]; then \
+		lazbuild $(X86_64_LINUX) --bm=Release $(LPI); \
 	else \
-		fpc -FE$(@D) $(DBGOPTS) -Tlinux $(SRC); \
+		lazbuild $(X86_64_LINUX) --bm=Debug $(LPI); \
 	fi
+	@echo Version: $(CURRVER)
 
 rel:
 	mkdir -p rel/$(THISARCH)
-	build/$(THISARCH)/$(BINARY) -n src/tw5editions/empty.html && \
+	build/$(THISARCH)/$(BINARY) -s src/tw5editions/empty.html && \
 		mv src/tw5editions/empty rel/$(THISARCH)
+	@echo empty at: rel/$(THISARCH)/empty
 
 relold: $(EXES)
 	@make clean
