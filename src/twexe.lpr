@@ -49,7 +49,7 @@ begin
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('vsz:hk',[],Opts,NonOpts);
+    ErrorMsg:=CheckOptions('vsz:hkr',[],Opts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -72,9 +72,12 @@ begin
       Exit;
     end;
 
-    //Process s option
+    //Process s option - no browser
     if HasOption('s') then
       TwexeOptions := TwexeOptions - [toOpenBrowser];
+
+    if HasOption('r') then
+      TwexeOptions := TwexeOptions + [toAllowRemoteClients];
 
   finally
     SetLength(FileArgs,NonOpts.Count);

@@ -68,12 +68,12 @@ type
     function FindFileForURI(const URI: string; var FN: string): boolean;
     procedure StartServerSocket; override;
     procedure HandleOnStartListening;
+    procedure HandleRequest(var ARequest: TFPHTTPConnectionRequest;
+      var AResponse: TFPHTTPConnectionResponse); override;
 
   public
     class function ReadLastURL(): string;
     class function SendStopRequest(const BaseURL: string = ''): boolean;
-    procedure HandleRequest(var ARequest: TFPHTTPConnectionRequest;
-      var AResponse: TFPHTTPConnectionResponse); override;
     constructor Create; //no override needed b/c there is no ctor in parent;
 
     property BaseDir: string read FBaseDir write SetBaseDir;
