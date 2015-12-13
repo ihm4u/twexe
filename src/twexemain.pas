@@ -128,7 +128,7 @@ implementation
     { Ivrit ascii font from:                                     }
     {http://patorjk.com/software/taag/#p=display&f=Ivrit&t=TWEXE }
     WriteLn();
-    TextColor(Blue);
+    TextColor(LightBlue);
     WriteLn(' _______        _________  _______  ');
     WriteLn('|_   _\ \      / / ____\ \/ / ____| ');
     WriteLn('  | |  \ \ /\ / /|  _|  \  /|  _|   ');
