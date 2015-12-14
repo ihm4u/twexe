@@ -450,7 +450,7 @@ begin
     begin
       OutStr:='';
       try
-        RunCmd(Cmd,OutStr,False,Input,Timeout);
+        RunCmd(Exe,Args,OutStr,False,Input,Timeout);
         //Read output from file if specified in 'output' field
         If Length(OutputF) >0 then //Read output file
         begin

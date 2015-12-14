@@ -27,7 +27,7 @@ Var
   OriginalExeFile: string;
 
 //Executes command synchronously or asynchronously
-function RunCmd(const Cmd: string; var Output: string;
+function RunCmd(const Cmd: string; const Args: string; var Output: string;
   const Async: boolean = False; const Input: string = '';
   const KillAfterNSeconds:Integer=-1): integer;
 
@@ -113,7 +113,7 @@ end;
 //
 // Execute process
 //
-function RunCmd(const Cmd: string; var Output: string;
+function RunCmd(const Cmd: string; const Args:string; var Output: string;
   const Async: boolean = False;
   const Input:string = '';
   const KillAfterNSeconds:Integer=-1): integer;
@@ -135,7 +135,10 @@ begin
   AProcess := TProcess.Create(nil);
   Out := TStringList.Create;
   try
-    AProcess.CommandLine := Cmd;
+    AProcess.Executable := Cmd;
+    AProcess.Parameters.Delimiter := ' ';
+    AProcess.Parameters.QuoteChar := '"';
+    AProcess.Parameters.DelimitedText:=Args;
 
     if Async then
       AProcess.Options := AProcess.Options // + [poNoConsole]
@@ -226,7 +229,7 @@ end;
 function RunShadow(const OpenBrowser:boolean):Boolean;
 Var
   OK:Boolean;
-  NewExe:string;
+  NewExe,Args:string;
   Out:string;
   Cmd:string;
   Opts: string;
@@ -246,8 +249,8 @@ begin
 
   //Copy executable to shadow file
   NewExe := GetShadowFile();
-  Cmd := NewExe + ' -z "' + ParamStr(0) + '"' + Opts;
-  Log('Creating shadow: '+Cmd);
+  Args :=  '-z "' + ParamStr(0) + '"' + Opts;
+  Log('Creating shadow: '+NewExe+' '+Args);
   try
     //Copy executable section of exe to shadow file
     OK:=MakeShadow( ParamStr(0), NewExe );
@@ -270,7 +273,7 @@ begin
   if (OK) then
   begin
     SetExecutePermission(NewExe);
-    OK:= RunCmd(Cmd,Out,True) <> -1;
+    OK:= RunCmd(NewExe,Args,Out,True) <> -1;
   end
   else
   begin

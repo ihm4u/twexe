@@ -212,7 +212,7 @@ implementation
     If Assigned(Serv) then
       FreeAndNil(Serv);
 
-    RunCmd(GetEXEFile()+Opts,Out,True);
+    RunCmd(GetEXEFile(),Opts,Out,True);
     Restarting := True;
     //Ignore WaitForUser() if somebody calls
     //it after having run RestartEXE()
@@ -301,7 +301,7 @@ begin
         If toOpenBrowser in TwexeOptions then
         begin
           WaitForUser('Press enter to run your new twixie...');
-          RunCmd(Twixie,O,True);
+          RunCmd(Twixie,'',O,True);
         end;
       end
       else
