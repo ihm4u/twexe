@@ -62,7 +62,10 @@ begin
     //Process z option
     i:=Opts.IndexOfName('z');
     If i <> -1 then
+    begin
       OrigExeFile:=Opts.ValueFromIndex[i];
+      exedata.OriginalExeFile:=OrigExeFile; //FIXME: this is lousy
+    end;
 
     //Process k option - extract tiddlywiki
     i:=Opts.IndexOfName('k');
