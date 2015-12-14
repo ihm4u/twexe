@@ -30,11 +30,12 @@ build/x86_64-linux/$(BINARY): $(SRCFILES)
 	fi
 	@echo Version: $(CURRVER)
 
-rel:
+rel: $(EXES)
 	mkdir -p rel/$(THISARCH)
-	build/$(THISARCH)/$(BINARY) -s src/tw5editions/empty.html && \
-		mv src/tw5editions/empty rel/$(THISARCH)
-	@echo empty at: rel/$(THISARCH)/empty
+	build/$(THISARCH)/$(BINARY) -s src/tw5editions/twexe.html && \
+		mv src/tw5editions/twexe rel/$(THISARCH)
+	@echo twexe at: rel/$(THISARCH)/twexe
+	echo $(CURRVER) > rel/VERSION
 
 relold: $(EXES)
 	@make clean
