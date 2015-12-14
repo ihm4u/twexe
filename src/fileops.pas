@@ -11,9 +11,10 @@ uses
 
 type
   TFileFuncName = function(const FileName: string;
-    var Stop: boolean;
-    var Params: TStrings): integer;
+    Params: TFPList): boolean;
 
+//Return the name of the file without extension or directory path
+function FileNameNoExt(Name:String):String;
 function MakeDirs(Dirs: string): boolean;
 function CopyFile(FromName: string; ToName: string; Delete: boolean = False;
   const Count: longint = -1): boolean;
@@ -23,13 +24,20 @@ function MakeBackup(const FromName: string; const ToName: string;
   const NoToKeep: integer = 3): boolean;
 function FindZipHdr(const FileName: string; const StartAt: int64 = 0): int64;
 function FindZipHdr(Stream: TStream; const StartAt: int64 = 0): int64;
-function ForEachFile(const WildPath: string; Func: TFileFuncName;
-  Params: TStrings; const Flags: longint = faAnyFile and faDirectory): integer;
+procedure ForEachFile(const WildPath: string; Func: TFileFuncName;
+  Params: TFPList; const Flags: longint = faAnyFile and faDirectory);
 
 implementation
+//
+// Get File name without extension
+//
+function FileNameNoExt(Name:String):String;
+begin
+   Result:=ChangeFileExt(ExtractFileName(Name),'');
+end;
 
-function ForEachFile(const WildPath: string; Func: TFileFuncName;
-  Params: TStrings; const Flags: longint = faAnyFile and faDirectory): integer;
+procedure ForEachFile(const WildPath: string; Func: TFileFuncName;
+  Params: TFPList; const Flags: longint = faAnyFile and faDirectory);
 var
   Info: TSearchRec;
   Stop: boolean;
@@ -39,7 +47,7 @@ begin
   if FindFirst(WildPath, Flags, Info) = 0 then
   begin
     repeat
-      Result := Func(Info.Name, Stop, Params);
+      Stop := Func(Info.Name, Params);
     until (FindNext(info) <> 0) or Stop;
   end;
   FindClose(Info);
@@ -50,39 +58,43 @@ begin
   Result := StrToInt64Def(BakList.Names[j], 0) - StrToInt64Def(BakList.Names[i], 0);
 end;
 
-function MakeList(const Name: string; var Stop: boolean; var Params: TStrings): integer;
+function MakeList(const Name: string; Params: TFPList): boolean;
 const
-  Regex = '.*_(\d{4})_(\d{2})_(\d{2})__(\d{2})_(\d{2})_(\d{2}).*';
+  DateRegex = '_(\d{4})_(\d{2})_(\d{2})__(\d{2})_(\d{2})_(\d{2})';
 var
-  DT: string;
+  DT,Basename,S,Regex: string;
   List: TStrings;
-  S: string;
 begin
-  Result := 0;
-  List := Params;
+  Result := False;
+  Basename := string(Params[0]);
+  List := TStringList(Params[1]);
+  Regex := QuoteRegExprMetaChars(FileNameNoExt(Basename)) + DateRegex
+    + QuoteRegExprMetaChars(ExtractFileExt(Basename));
   S := Name;
   if ExecRegExpr(Regex, S) then
   begin
     DT := ReplaceRegExpr(Regex, S, '$1$2$3$4$5$6', True);
     List.Add(DT + '=' + Name);
   end;
-  Result := List.Count;
 end;
 
 procedure DeleteOld(const BaseName: string; const NoToKeep: integer);
 var
   List: TStringList;
-  DT: int64;
+  Params: TFPList;
   i, DCount: integer;
   Dir, FN: string;
-  F: TFileFuncName;
+
 begin
   List := TStringList.Create;
+  Params := TFPList.Create;
   try
     try
       //Build list of files
       Dir := ConcatPaths([ExtractFilePath(BaseName), '*']);
-      ForEachFile(Dir, @MakeList, List);
+      Params.Add(Pointer(BaseName));
+      Params.Add(Pointer(List));
+      ForEachFile(Dir, @MakeList, Params);
 
       //Exit if we are asked to keep more than what already exists
       if NoToKeep >= List.Count then
@@ -104,6 +116,8 @@ begin
     finally
       if Assigned(List) then
         FreeAndNil(List);
+      if Assigned(Params) then
+        FreeAndNil(Params);
     end;
   except
     on E: Exception do
@@ -247,7 +261,6 @@ function FindZipHdr(Stream: TStream; const StartAt: int64 = 0): int64;
 var
   Buf: string;
   ZipPos, ReadCount: int64;
-  Found: boolean;
   i: integer;
   //Shift the header signature one bit right because otherwise it
   //can be found in the executable also
@@ -262,7 +275,7 @@ const
 begin
   ZipPos := -1;
   Result := -1;
-  Found := False;
+
   //Unshift the Zip header
   for i := 0 to 7 do
     ZipHdrC[i] := char(ZipHdr[i] shr 1);

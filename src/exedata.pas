@@ -46,9 +46,6 @@ function GetEXEName():String;
 //Get Path of original executable (not shadow), including directory separator
 function GetEXEPath():String;
 
-//Return the name of the file without extension or directory path
-function FileNameNoExt(Name:String):String;
-
 //Run a shadow executable of the current one
 function RunShadow(const OpenBrowser:boolean):Boolean;
 
@@ -94,13 +91,6 @@ begin
       Delete(Result,1,1);
 end;
 
-//
-// Get File name without extension
-//
-function FileNameNoExt(Name:String):String;
-begin
-   Result:=ChangeFileExt(ExtractFileName(Name),'');
-end;
 
 //
 // Get executable path, including trailing separator

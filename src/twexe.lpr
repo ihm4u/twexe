@@ -9,7 +9,7 @@ uses
   {$ENDIF}{$ENDIF}
   Classes, SysUtils, CustApp
   { twexe units }
-  ,logger, twexemain, exedata
+  ,logger, twexemain, exedata, fileops
   ;
 
 type
