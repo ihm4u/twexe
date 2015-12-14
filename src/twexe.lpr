@@ -20,6 +20,7 @@ type
   private
     FileArgs: array of string;
     OrigExeFile: string;
+    OutDir: string;
 
   protected
     procedure DoRun; override;
@@ -49,7 +50,7 @@ begin
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('vsz:hkr',[],Opts,NonOpts);
+    ErrorMsg:=CheckOptions('vsz:hk::r',[],Opts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -62,6 +63,13 @@ begin
     i:=Opts.IndexOfName('z');
     If i <> -1 then
       OrigExeFile:=Opts.ValueFromIndex[i];
+
+    //Process k option - extract tiddlywiki
+    i:=Opts.IndexOfName('k');
+    If i <> -1 then
+      OutDir := Opts.ValueFromIndex[i]
+    else
+      OutDir := GetEXEPath();
 
     //Process h option
     if HasOption('h','help') then
@@ -105,8 +113,9 @@ begin
   begin
     PrintHeader();
     Show('Extracting tiddlywiki5 html file.');
-    ExtractData(GetEXEFile(),GetEXEPath());
-    Show('Tiddlywiki written in directory ''' + GetEXEPath() + '''.');
+    //OutDir is set by ProcessOptions()
+    ExtractData(GetEXEFile(),OutDir);
+    Show('Tiddlywiki written in directory ''' + OutDir + '''.');
     Terminate;
     Exit;
   end;
@@ -166,12 +175,12 @@ begin
   ResetColors();
 
   TextColor(Blue);
-  writeln(#9,'-k');
+  writeln(#9,'-k [dir]');
   TextColor(DarkGray);
-  writeln(#9,#9,Format('Write html wiki file to ''%s''.'
-    ,[GetEXEName()+'.html']));
+  writeln(#9,#9,'Write html wiki file in the specified directory or ');
+  writeln(#9,#9,'in the directory of this twixie if no directory is specified.');
 
-    TextColor(Blue);
+  TextColor(Blue);
   writeln(#9,'-v');
   TextColor(DarkGray);
   writeln(#9,#9,Format('Print version number and exit.'
