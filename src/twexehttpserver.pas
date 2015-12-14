@@ -167,7 +167,10 @@ begin
   StoreLastURL(Self.URL);
 
   if (FOpenBrowser) then
+  begin
     OpenURL(Self.URL);
+    Show('Starting browser please wait...');
+  end;
 end;
 
 
