@@ -34,6 +34,7 @@ type
   TTwexeOptions = set of TTwexeOption;
 var
   TwexeOptions : TTwexeOptions;
+  ConversionOutDir: string='';
 
 procedure TwexeMain(
   const OrigExeFile: string;
@@ -169,15 +170,17 @@ implementation
     end;
   end;
 
-  function ConvertWikiToExe(DataFile:string):boolean;
+  function ConvertWikiToExe(DataFile:string; var OutExeFN:string):boolean;
   Var
     OK:Boolean;
-    OutExeFN:String;
     Ext:string;
   begin
     Result:=False;
     Ext := GetOSEXEExt();
-    OutExeFN := ChangeFileExt(ExpandFileName(DataFile),Ext);
+    If ConversionOutDir = '' then
+      ConversionOutDir := ExtractFileDir(ExpandFileName(DataFile));
+
+    OutExeFN := ConcatPaths([ConversionOutDir,FileNameNoExt(DataFile) + Ext]);
     Show('Generating ''' + OutExeFN + '''...');
     OK:=fileops.CopyFile(GetEXEFile(),OutExeFN);
     
@@ -290,10 +293,9 @@ begin
         WikiToConvert := ExpandFileName(FFileArgs[i]);
         Inc(i);
       until IsWikiFile(WikiToConvert) or (i=Length(FFileArgs));
-      If IsWikiFile(WikiToConvert) and ConvertWikiToExe(WikiToConvert) then
+      If IsWikiFile(WikiToConvert) and ConvertWikiToExe(WikiToConvert,Twixie) then
       begin
         O:='';
-        Twixie:=ChangeFileExt(WikiToConvert,GetOSEXEExt());
         ShowCongrats();
         Show(Format('Your new twixie: ''%S''',[Twixie]));
 

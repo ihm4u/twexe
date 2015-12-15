@@ -50,7 +50,7 @@ begin
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('vsz:hk::r',[],Opts,NonOpts);
+    ErrorMsg:=CheckOptions('vo:sz:hk::r',[],Opts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -59,13 +59,18 @@ begin
       Terminate;
     end;
 
-    //Process z option
+    //Process z option - internal option for original exe path
     i:=Opts.IndexOfName('z');
     If i <> -1 then
     begin
       OrigExeFile:=Opts.ValueFromIndex[i];
       exedata.OriginalExeFile:=OrigExeFile; //FIXME: this is lousy
     end;
+
+    //Process o option - output file for conversion
+    i:=Opts.IndexOfName('o');
+    If i <> -1 then
+      ConversionOutDir:=Opts.ValueFromIndex[i];
 
     //Process k option - extract tiddlywiki
     i:=Opts.IndexOfName('k');
