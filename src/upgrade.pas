@@ -71,7 +71,7 @@ begin
   OnlineVer := Trim(GetFromURL(VERSION_URL));
   nCurrVer := VerToInt(_VERSION,CurrSfx);
   nOnlineVer:= VerToInt(OnlineVer,OnlineSfx);
-  LogFmt('Online version is ''%s'', current version is ''%s''.',
+  LogFmt('Online version is %s, current version is %s',
     [OnlineVer,_VERSION]);
   if nCurrVer < nOnlineVer then
     Result:=True

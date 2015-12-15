@@ -308,16 +308,12 @@ begin
       //Append received wiki to executable
       AppendFile(GetEXEFile(), FWikiFile);
 
-      { **************************************************************************
-        **  This code may be used later to move file to upload dir, but for now we
-        ** don't need it
-      //Move file to Uploaddir
-      UserFName := FileNameNoExt(FUserFile);
-      if ( UserFName <> EXEName ) then
-         Log('User file "'+UserFName+'" is different from executable name, ignoring.');
-      FWikiFile := ConcatPaths([FUploadDir, ExeName])+'.html';
-      OK := fileops.CopyFile(ARequest.Files[0].LocalFileName, FWikiFile, True);
-       ***************************************************************************}
+      //Write to HTML file in UploadDir if UploadDir is different from '.'
+      If FUploadDir <> '.' then
+      begin
+          OK := fileops.CopyFile(FWikiFile,
+            ConcatPaths([FUploadDir,ExtractFileName(FUserFile)]));
+      end;
     end;
 
     //Send 200 OK to the browser if we were able to save the file
