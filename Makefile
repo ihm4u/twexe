@@ -30,7 +30,7 @@ DOEDITION=mkdir -p rel/$(1) && \
 	  $(3) build/$(1)/$(2) -s -o rel/$(1) src/tw5editions/twexe.html;
 
 
-all: $(EXES)
+#all: $(EXES)
 
 build/x86_64-linux/$(BINARY): $(SRCFILES)
 	@mkdir -p $(@D)

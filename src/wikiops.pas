@@ -9,7 +9,14 @@ interface
 uses
   SysUtils,Classes,regexpr,
   
-  logger,fileops,exedata;
+  logger,fileops,exedata,
+  {$ifdef unix}
+  unixlib
+  {$endif}
+  {$ifdef windows}
+  windowslib
+  {$endif}
+  ;
 
   const
     woAlways = 1;
@@ -25,8 +32,21 @@ uses
 
   function FindWikiFile(const Dir: string; var WikiName: string):boolean;
   function IsWikiFile(const FileName: string):boolean;
-  
+  function WikiNameToExeName(const WikiName:string):string;
+  function ExeNameToWikiName(const ExeName:string):string;
+
 implementation
+  //FIXME: use these two functions any time we need a wiki name
+  // from an exe name or viceversa
+  function WikiNameToExeName(const WikiName:string):string;
+  begin
+    Result := ChangeFileExt(ExpandFileName(WikiName),GetOSEXEExt());
+  end;
+
+  function ExeNameToWikiName(const ExeName:string):string;
+  begin
+    Result := ChangeFileExt(ExpandFileName(ExeName),'.html');
+  end;
 
   //Returns true if file is a TiddlyWiki; false otherwise
   function IsWikiFile(const FileName: string):boolean;

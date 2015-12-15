@@ -20,7 +20,7 @@ uses
   ssockets, //For ESocketError
 
   {twexe units}
-  twexehttpserver,exedata,logger,fileops,wikiops,version
+  twexehttpserver,exedata,logger,fileops,wikiops,version,upgrade
   {$ifdef unix}
   ,unixlib
   {$endif}
@@ -190,9 +190,11 @@ implementation
       Log(''''+ ExtractFileName(DataFile)
               + ''' has been converted to a twixie named ''' + OutExeFN + '''.');
       Result:=True;
+      ExitCode:=0;
     end
     else
     begin
+      ExitCode:=6;
       Result:=False;
       logger.Error('Unable to create ''' + OutExeFN + '''');
     end;
@@ -299,7 +301,7 @@ begin
         ShowCongrats();
         Show(Format('Your new twixie: ''%S''',[Twixie]));
 
-        //Open browser and server unless -n flag was specified
+        //Open browser and server unless -s flag was specified
         If toOpenBrowser in TwexeOptions then
         begin
           WaitForUser('Press enter to run your new twixie...');
@@ -349,6 +351,13 @@ begin
   //Extract data bundled in executable
   try
     HandleExtractData();
+    //Possible upgrade needs to be done AFTER
+    //wiki has been extracted
+    If NeedUpgrade() then
+    begin
+      RestartEXE();
+      Exit;
+    end;
   except
     WaitForUser();
     ExitCode:=1;
