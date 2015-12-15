@@ -39,6 +39,7 @@ var
 
 procedure Show(const Msg: string; const NewLine: boolean = True);
 procedure Log(const Msg: string);
+procedure LogFmt(const Msg:string; Args:array of const);
 procedure Dbg(const Msg: string; const Level: integer = 1);
 procedure Error(const Msg: string);
 procedure TextColor(const Color: byte);
@@ -228,6 +229,11 @@ begin
       Write(LineEnding);
     ResetColors();
   end;
+end;
+
+procedure LogFmt(const Msg:string; Args:array of const);
+begin
+  Log(Format(Msg,Args));
 end;
 
 procedure Dbg(const Msg: string; const Level: integer = 1);

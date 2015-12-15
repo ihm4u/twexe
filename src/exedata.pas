@@ -191,7 +191,7 @@ begin
     else //No input and no KillAfterNSeconds
       AProcess.Execute;
 
-    Result:= 0;
+    Result:= AProcess.ExitCode;
 
     if not Async and not Terminated then
     begin

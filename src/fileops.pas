@@ -16,7 +16,7 @@ type
 //Return the name of the file without extension or directory path
 function FileNameNoExt(Name:String):String;
 function MakeDirs(Dirs: string): boolean;
-function CopyFile(FromName: string; ToName: string; Delete: boolean = False;
+function CopyFile(FromName: string; ToName: string; DeleteOriginal: boolean = False;
   const Count: longint = -1): boolean;
 function MoveFile(FromName: string; ToName: string;
   const DeleteFirst: boolean = False): boolean;
@@ -170,7 +170,7 @@ begin
   FreeAndNil(L);
 end;
 
-function CopyFile(FromName: string; ToName: string; Delete: boolean = False;
+function CopyFile(FromName: string; ToName: string; DeleteOriginal: boolean = False;
   const Count: longint = -1): boolean;
 var
   SourceF, DestF: TFileStream;
@@ -204,7 +204,7 @@ begin
   end;
 
   //Delete original file if asked
-  if Result and Delete then
+  if Result and DeleteOriginal then
     DeleteFile(FromName);
 end;
 

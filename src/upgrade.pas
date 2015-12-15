@@ -7,7 +7,14 @@ interface
 uses
   Classes, SysUtils, fphttpclient,
   {twexe units}
-  exedata, wikiops, fileops, logger, version;
+  exedata, wikiops, fileops, logger, version,
+  {$ifdef unix}
+  unixlib
+  {$endif}
+  {$ifdef windows}
+  windowslib
+  {$endif}
+  ;
 
   function NeedUpgrade():boolean;
 
@@ -52,21 +59,20 @@ begin
   end;
   Triad := StringReplace(Triad,'.','',[rfReplaceAll]);
   Result:=StrToIntDef(Triad,0);
-  Log(Format('Ver: %s Integer: %d Suffix: %s',[Ver,Result, Suffix]));
 end;
 
 //Return true if we need to upgrage
-function NewerVersionOnline():boolean;
+function NewerVersionOnline(var OnlineVer:string):boolean;
 Var
-  OnlineVer,CurrSfx,OnlineSfx:string;
+  CurrSfx,OnlineSfx:string;
   i,nCurrVer,nOnlineVer:Integer;
 begin
   Result := False;
   OnlineVer := Trim(GetFromURL(VERSION_URL));
   nCurrVer := VerToInt(_VERSION,CurrSfx);
   nOnlineVer:= VerToInt(OnlineVer,OnlineSfx);
-  Log(Format('Online version is ''%s'', current version is ''%s''.',
-    [OnlineVer,_VERSION]));
+  LogFmt('Online version is ''%s'', current version is ''%s''.',
+    [OnlineVer,_VERSION]);
   if nCurrVer < nOnlineVer then
     Result:=True
   else if (nCurrVer = nOnlineVer) and (CurrSfx <> OnlineSfx) then
@@ -77,6 +83,7 @@ procedure Upgrade(const NewEXE:string);
 Var
   WikiName: string='';
   O: string='';
+  Ans:Integer;
 begin
   If not IAmShadow() then
     Raise Exception.Create('Upgrade must be done from shadow');
@@ -87,30 +94,40 @@ begin
   //We assume data has already been extracted in UnzippedDir
   If FindWikiFile(GetUnZipPath(),WikiName) then
   begin
-    If RunCmd(NewEXE,'-s ' + WikiName,O)=0 then
-      MoveFile(WikiNameToExeName(WikiName),GetEXEFile(),True)
-    else
-      Error(Format('Failure upgrading: unable to convert ''$s'' to a twixie',
-        [WikiName]));
+    Ans:=RunCmd(NewEXE,'-s ' + WikiName,O);
+    If (Ans<>0) or
+       not CopyFile(WikiNameToExeName(WikiName),GetEXEFile(),True) then
+    begin
+      LogFmt('Exit code from conversion %d',[Ans]);
+      Raise Exception.CreateFmt('Unable to convert ''%s'' to a twixie',
+        [WikiName]);
+    end;
   end;
 
 end;
 
 function NeedUpgrade():boolean;
 Var
-  UpgDir,UpgFile: string;
+  UpgDir,UpgFile, NewVer: string;
 begin
   Result := False;
-  if NewerVersionOnline() then
+  if NewerVersionOnline(NewVer) then
   begin
     UpgDir := ConcatPaths([GetStoragePath(),'_upg']);
     UpgFile := ConcatPaths([UpgDir,ExtractFileName(GetEXEFile())]);
-    MakeDirs(UpgDir);
-    GetFromURL(UPGRADE_URL,UpgFile);
-    Upgrade(UpgFile);
-    Show('Upgrade successful.');
-    Result := True;
-    ExitCode := 0;
+    try
+      MakeDirs(UpgDir + DirectorySeparator);
+      Log('Downloading upgrade.');
+      GetFromURL(UPGRADE_URL,UpgFile);
+      SetExecutePermission(UpgFile);
+      Log('Download finished. Starting upgrade.');
+      Upgrade(UpgFile);
+      Show('Upgraded to version '+NewVer);
+      Result := True;
+      ExitCode := 0;
+    except on E:Exception do
+      Error('Unable to upgrade: '+E.ToString);
+    end;
   end;
 end;
 
