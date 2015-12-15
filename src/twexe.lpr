@@ -122,7 +122,7 @@ begin
     PrintHeader();
     Show('Extracting tiddlywiki5 html file.');
     //OutDir is set by ProcessOptions()
-    ExtractData(GetEXEFile(),OutDir);
+    HandleExtractData(OutDir);
     Show('Tiddlywiki written in directory ''' + OutDir + '''.');
     Terminate;
     Exit;

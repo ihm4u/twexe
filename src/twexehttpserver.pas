@@ -309,6 +309,7 @@ begin
       AppendFile(GetEXEFile(), FWikiFile);
 
       //Write to HTML file in UploadDir if UploadDir is different from '.'
+      //which is the default
       If FUploadDir <> '.' then
       begin
           OK := fileops.CopyFile(FWikiFile,

@@ -41,6 +41,7 @@ procedure TwexeMain(
   const FileArgs:array of string);
 
 procedure PrintHeader();
+procedure HandleExtractData(const Dir:string='');
 
 implementation
   var
@@ -143,18 +144,23 @@ implementation
   end;
 
   //Extract data or abort
-  procedure HandleExtractData();
+  procedure HandleExtractData(const Dir:string='');
   Var
     WikiName: string;
     NewName: string;
+    OutDir: string;
   begin
     try
       WikiName:='';
+      If Dir='' then
+        OutDir := GetUnZipPath()
+      else
+        OutDir := Dir;
       Log('Extracting data from '''+ GetEXEFile() + '''');
-      ExtractData(GetEXEFile());
+      ExtractData(GetEXEFile(),OutDir);
       //Make sure unzipped wiki file has the same name as the twixie
-      FindWikiFile(GetUnZipPath(),WikiName);
-      NewName := GetUnZipPath() + GetEXEName() + '.html';
+      FindWikiFile(OutDir,WikiName);
+      NewName := ConcatPaths([OutDir,GetEXEName() + '.html']);
       if WikiName <> NewName then
       begin
         Log('Renaming '''+WikiName+''' to '''+NewName+'''.');
