@@ -1,0 +1,6 @@
+Instructions for how to commit a new release to it works with github pages.
+
+Build and compile the relase 
+1. Commit the sources but NOT the release executables
+2. tag the source commit with the release version
+3. Commit the release executables
