@@ -4,4 +4,4 @@ Build and compile the relase
 1. Commit the sources but NOT the release executables
 2. tag the source commit with the release version
 3. Rebuild project so that new version.pas is built
-4. Commit the new release executables
+4. Commit the new release executables and index.html
