@@ -343,7 +343,8 @@ begin
     UnZipper.FileName := ExeFile;
     UnZipper.OutputPath := FDir;
     UnZipper.UnZipAllFiles;
-    Log('Extracted data in ' + UnZipper.OutputPath + ' from ' + ExeFile);
+    LogFmt('Extracted data in ''%s'' from ''%s''',
+      [UnZipper.OutputPath, ExeFile]);
   finally
     FreeAndNil(CB);
     if Assigned(UnZipper) then
