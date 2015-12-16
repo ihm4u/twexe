@@ -361,7 +361,7 @@ begin
     //wiki has been extracted
     If NeedUpgrade() then
     begin
-      RestartEXE();
+      RestartEXE(True);
       Exit;
     end;
   except
