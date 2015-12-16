@@ -44,6 +44,8 @@ build/i386-win32/$(BINARY).exe: $(SRCFILES)
 
 rel: rel/x86_64-linux/$(BINARY) rel/i386-win32/$(BINARY).exe
 	echo $(CURRVER) > rel/VERSION
+	#Update version of index.html
+	reltools/updateindex.sh index.html
 
 rel/x86_64-linux/$(BINARY): build/x86_64-linux/$(BINARY)
 	$(call DOEDITION,x86_64-linux,$(BINARY),)
