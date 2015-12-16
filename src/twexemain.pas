@@ -36,6 +36,7 @@ var
   TwexeOptions : TTwexeOptions;
   ConversionOutDir: string='';
 
+// These are used from twexe.lpr
 procedure TwexeMain(
   const OrigExeFile: string;
   const FileArgs:array of string);
