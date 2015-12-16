@@ -15,7 +15,7 @@ EXES= build/x86_64-linux/$(BINARY) build/i386-win32/$(BINARY).exe
 CURRVER:=$(shell git describe --tags --abbrev=0)
 WINLAZBUILD=wine "$$WINEAPPS/lazarus/lazbuild.exe"
 
-.PHONY: $(ARCHES) version clean
+.PHONY: $(ARCHES) version clean rel
 
 checkversion:=$(shell if ! grep -Fqs `git describe --tags --abbrev=4` "src/version.pas"; then \
 	   sed -e 's/___VERSION___/$(CURRVER)/' src/version.skel > "src/version.pas"; \

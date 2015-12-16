@@ -361,6 +361,7 @@ begin
     //wiki has been extracted
     If NeedUpgrade() then
     begin
+      //Make sure browser is opened
       RestartEXE(True);
       Exit;
     end;
