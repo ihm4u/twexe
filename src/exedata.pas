@@ -6,7 +6,7 @@ interface
 
 uses
   // Free pascal units
-  Classes, SysUtils, Zipper, Process,
+  Classes, SysUtils, Zipper, Process, dateutils,
 
   //Project units 
   logger,fileops,
@@ -127,8 +127,9 @@ const
 var
   Out: TStrings;
   AProcess: TProcess;
-  RunningmSecs:Integer;
+  RunningSecs,OldLen,AvailCnt,ReadCnt:Integer;
   Terminated:boolean;
+  StartTime: TDateTime;
 begin
   Result := -1;
   Terminated := False;
@@ -140,17 +141,22 @@ begin
     AProcess.Parameters.QuoteChar := '"';
     AProcess.Parameters.DelimitedText:=Args;
 
+    //Async call
     if Async then
-      AProcess.Options := AProcess.Options // + [poNoConsole]
-    else
-      AProcess.Options := AProcess.Options + [poWaitOnExit, poUsePipes,
-      poNoConsole, poStderrToOutPut];
-
-    If not Async and ((Length(Input) > 0) or (KillAfterNSeconds>0)) then
     begin
-      AProcess.Options := AProcess.Options - [poWaitOnExit];// + [poNoConsole];
+      AProcess.Options := [];
+      Aprocess.Execute;
+      Result := 0;
+      Exit;
+    end
+    else
+    // Synchronous call with process timeout and capturing output
+    begin
+      AProcess.Options := [poUsePipes,poNoConsole, poStderrToOutPut];
       AProcess.Execute;
-      //Send input on stdin
+      StartTime := Now;
+
+      //Write input on stdin
       If (Length(Input) > 0) then
       begin
         Aprocess.Input.Write(Input[1],Length(Input));
@@ -162,46 +168,50 @@ begin
         AProcess.CloseInput;
       end;
 
-      //If KillAfterNSeconds was specified, kill process
-      //if it has not ended after that number of seconds
-      RunningmSecs:=0;
-      If KillAfterNSeconds > 0 then
+      //Monitor process, appending output and terminating it
+      //if it runs for more than KillAfterNSeconds
+      RunningSecs:=0;
+      While AProcess.Running and not Terminated do
       begin
-        While AProcess.Running and (RunningmSecs<KillAfterNSeconds*1000) do
+        ///////////////////////////////////////////////////////////////////
+        //Append output to output buffer if available,
+        //otherwise idle for 50ms
+        AvailCnt := AProcess.Output.NumBytesAvailable;
+        If AvailCnt>0 then
         begin
+          OldLen := Length(Output);
+          SetLength(Output,OldLen+AvailCnt);
+          ReadCnt := AProcess.Output.Read(Output[OldLen+1],AvailCnt);
+        end
+        else //To prevent overloading CPU
           Sleep(50);
-          RunningmSecs+=50;
-          If RunningmSecs >= KillAfterNSeconds*1000 then
-          begin
-            AProcess.Terminate(1);
-            Output := '';
-            Terminated:=True;
-            AProcess.Parameters.StrictDelimiter:=True;
-            AProcess.Parameters.Delimiter:=' ';
-            Show(Format('External process ''%S'' exceeded alloted time (used %.1F secs). Terminating it.',
-              [FileNameNoExt(AProcess.Executable) + ' '
-               + Aprocess.Parameters.DelimitedText,
-               RunningmSecs / 1000]));
-          end;
+
+        //////////////////////////////////////////////////////////////////
+        //Terminate processs if it has reached its alloted time
+        RunningSecs := SecondsBetween(StartTime,Now);
+        If (KillAfterNSeconds>0)
+           and(RunningSecs >= KillAfterNSeconds) then
+        begin
+          AProcess.Terminate(1);
+          Output := '';
+          Terminated:=True;
+          AProcess.Parameters.StrictDelimiter:=True;
+          AProcess.Parameters.Delimiter:=' ';
+          Show(Format('External process ''%S'' exceeded alloted time (used %d secs). Terminating it.',
+            [FileNameNoExt(AProcess.Executable) + ' '
+             + Aprocess.Parameters.DelimitedText,
+             RunningSecs]));
         end;
-      end
-      else //No KillAfterNSeconds;
-        AProcess.WaitOnExit;
-    end
-    else //No input and no KillAfterNSeconds
-      AProcess.Execute;
+      end;
 
-    Result:= AProcess.ExitCode;
-
-    if not Async and not Terminated then
-    begin
-      Out.BeginUpdate;
-      Out.Clear;
-      Out.LoadFromStream(AProcess.Output);
-      Out.EndUpdate;
-      Output := Out.Text;
-      Result := AProcess.ExitStatus;
-    end
+      //Set the result value to the exit code of the program,
+      //or -2 if it was terminated (in case of an exception
+      //it will be left at -1 which is the initialization value)
+      if not Terminated then
+        Result:= AProcess.ExitCode
+      else
+        Result := -2;
+    end;
   finally
     if Assigned(AProcess) then
       FreeAndNil(AProcess);

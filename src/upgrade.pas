@@ -44,12 +44,13 @@ begin
   end;
 end;
 
-function VerToInt(const Ver:string; var Suffix:string):Integer;
+function VerToInt(const Ver:string; out Suffix:string):Integer;
 Var
   poz:Integer;
   Triad:string='';
 begin
   Result := 0;
+  Suffix := '';
   Poz := Pos('-',Ver);
   Triad := Ver;
   If Poz <> 0 then
@@ -65,7 +66,7 @@ end;
 function NewerVersionOnline(var OnlineVer:string):boolean;
 Var
   CurrSfx,OnlineSfx:string;
-  i,nCurrVer,nOnlineVer:Integer;
+  nCurrVer,nOnlineVer:Integer;
 begin
   Result := False;
   OnlineVer := Trim(GetFromURL(VERSION_URL));
