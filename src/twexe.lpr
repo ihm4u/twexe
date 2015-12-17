@@ -50,7 +50,7 @@ begin
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('vo:sz:hk::r',[],Opts,NonOpts);
+    ErrorMsg:=CheckOptions('pvo:sz:hk::r',[],Opts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -91,6 +91,13 @@ begin
     //Process s option - no browser
     if HasOption('s') then
       TwexeOptions := TwexeOptions - [toOpenBrowser];
+
+    //Process p option - programatic run from program/script
+    if HasOption('p') then
+    begin
+      TwexeOptions := TwexeOptions + [toProgramaticRun] - [toOpenBrowser];
+    end;
+
 
     if HasOption('r') then
       TwexeOptions := TwexeOptions + [toAllowRemoteClients];

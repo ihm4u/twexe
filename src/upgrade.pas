@@ -22,7 +22,7 @@ implementation
 const
   VERSION_URL = 'http://ihm4u.github.io/twexe/rel/VERSION';
   {$ifdef windows}
-  UPGRADE_URL = 'http://ihm4u.github.io/twexe/rel/i386-linux/twexe.exe';
+  UPGRADE_URL = 'http://ihm4u.github.io/twexe/rel/i386-win32/twexe.exe';
   {$endif}
   {$ifdef linux}
   UPGRADE_URL = 'http://ihm4u.github.io/twexe/rel/x86_64-linux/twexe';
@@ -83,7 +83,8 @@ procedure Upgrade(const NewEXE:string);
 Var
   WikiName: string='';
   O: string='';
-  Ans:Integer;
+  Args: string;
+  Ans: Integer;
 begin
   If not IAmShadow() then
     Raise Exception.Create('Upgrade must be done from shadow');
@@ -94,7 +95,10 @@ begin
   //We assume data has already been extracted in UnzippedDir
   If FindWikiFile(GetUnZipPath(),WikiName) then
   begin
-    Ans:=RunCmd(NewEXE,'-s ' + WikiName,O);
+    Args := '-p "' + WikiName + '"';
+    LogFmt('Running ''%s'' ''%s''',[NewExe,Args]);
+    Ans:=RunCmd(NewEXE,Args,O);
+    Sleep(200); //Give a little time for executable to close properly
     If (Ans<>0) or
        not CopyFile(WikiNameToExeName(WikiName),GetEXEFile(),True) then
     begin

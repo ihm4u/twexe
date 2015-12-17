@@ -198,9 +198,8 @@ begin
       if Assigned(DestF) then
         FreeAndNil(DestF);
     end;
-  except
-    raise Exception.Create('Unable to copy ''' + FromName +
-      ''' to ''' + ToName + '''.');
+  except on E:Exception do
+    raise Exception.CreateFmt('Unable to copy ''%s''  to ''%s'' : %s',[FromName,ToName,E.toString]);
   end;
 
   //Delete original file if asked

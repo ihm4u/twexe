@@ -30,7 +30,7 @@ uses
   {$endif};
 
 type
-  TTwexeOption = (toOpenBrowser,toAllowRemoteClients);
+  TTwexeOption = (toOpenBrowser,toAllowRemoteClients,toProgramaticRun);
   TTwexeOptions = set of TTwexeOption;
 var
   TwexeOptions : TTwexeOptions;
@@ -244,7 +244,8 @@ end;
 function WaitForUser(txt:string='Press enter to exit...'):boolean;
 begin
   {$ifdef windows} // So that the console doesnt close
-  If not DoNotWaitForUser then
+  If not DoNotWaitForUser and
+     not (toProgramaticRun in TwexeOptions) then
   begin
     WriteLn(txt);
     Readln;
