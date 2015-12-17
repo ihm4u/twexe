@@ -110,6 +110,25 @@ begin
       Result:=True;
 end;
 
+procedure StoreProcOutput(AProcess:TProcess; var Output:string);
+Var
+  OldLen,AvailCnt,ReadCnt:Integer;
+begin
+  If not Assigned(AProcess.Output) then
+    Exit;
+
+  AvailCnt := AProcess.Output.NumBytesAvailable;
+  If AvailCnt>0 then
+  begin
+    OldLen := Length(Output);
+    SetLength(Output,OldLen+AvailCnt);
+    ReadCnt := AProcess.Output.Read(Output[OldLen+1],AvailCnt);
+  end
+  else
+    //To prevent overloading CPU
+    Sleep(50);
+end;
+
 //
 // Execute process
 //
@@ -160,12 +179,15 @@ begin
       If (Length(Input) > 0) then
       begin
         Aprocess.Input.Write(Input[1],Length(Input));
+        { Writing an EOF at end of input stream was needed in windows during
+          some tests, but after rewriting this function it is not needed anymore.
+          We leave it here for further debugging in case of a future problem.
         If EOFInd <> '' then
         begin
           Aprocess.Input.Write(EOFInd[1],Length(EOFInd));
           Log(Format('Wrote EOF after external proc input: %d bytes.',[Length(EOFInd)]));
         end;
-        AProcess.CloseInput;
+        AProcess.CloseInput;}
       end;
 
       //Monitor process, appending output and terminating it
@@ -176,15 +198,7 @@ begin
         ///////////////////////////////////////////////////////////////////
         //Append output to output buffer if available,
         //otherwise idle for 50ms
-        AvailCnt := AProcess.Output.NumBytesAvailable;
-        If AvailCnt>0 then
-        begin
-          OldLen := Length(Output);
-          SetLength(Output,OldLen+AvailCnt);
-          ReadCnt := AProcess.Output.Read(Output[OldLen+1],AvailCnt);
-        end
-        else //To prevent overloading CPU
-          Sleep(50);
+        StoreProcOutput(AProcess,Output);
 
         //////////////////////////////////////////////////////////////////
         //Terminate processs if it has reached its alloted time
@@ -193,7 +207,6 @@ begin
            and(RunningSecs >= KillAfterNSeconds) then
         begin
           AProcess.Terminate(1);
-          Output := '';
           Terminated:=True;
           AProcess.Parameters.StrictDelimiter:=True;
           AProcess.Parameters.Delimiter:=' ';
@@ -208,9 +221,16 @@ begin
       //or -2 if it was terminated (in case of an exception
       //it will be left at -1 which is the initialization value)
       if not Terminated then
+      begin
+        //Read any remainng output after process finished
+        StoreProcOutput(AProcess,Output);
         Result:= AProcess.ExitCode
-      else
+      end
+      else  //Terminated
+      begin
         Result := -2;
+        Output := '';
+      end;
     end;
   finally
     if Assigned(AProcess) then
