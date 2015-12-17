@@ -42,9 +42,10 @@
       <Unit0>
         <Filename Value="twexe.lpr"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="87"/>
-        <CursorPos X="61" Y="95"/>
+        <TopLine Value="144"/>
+        <CursorPos Y="153"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -86,10 +87,9 @@
       <Unit5>
         <Filename Value="exedata.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="109"/>
-        <CursorPos X="35" Y="113"/>
+        <TopLine Value="146"/>
+        <CursorPos X="37" Y="189"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit5>
@@ -338,14 +338,14 @@
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="exedata.pas"/>
-        <Line Value="264"/>
+        <Line Value="267"/>
       </Item1>
       <Item2>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="exedata.pas"/>
-        <Line Value="247"/>
+        <Line Value="250"/>
       </Item2>
       <Item3>
         <Kind Value="bpkSource"/>

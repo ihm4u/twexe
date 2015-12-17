@@ -43,6 +43,7 @@ procedure TwexeMain(
 
 procedure PrintHeader();
 procedure HandleExtractData(const Dir:string='');
+function WaitForUser(txt:string='Press enter to exit...'):boolean;
 
 implementation
   var

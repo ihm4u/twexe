@@ -116,38 +116,46 @@ end;
 
 procedure TTwexeApp.DoRun;
 begin
+  try
+    //Handle cmdline args, and set values in twexemain.Twexeoptions
+    ProcessOptions();
 
-  //Handle cmdline args, and set values in twexemain.Twexeoptions
-  ProcessOptions();
+    If Terminated then
+      Exit;
 
-  If Terminated then
-    Exit;
+    //Write html tiddlywiki file
+    If HasOption('k','') then
+    begin
+      PrintHeader();
+      Show('Extracting tiddlywiki5 html file.');
+      //OutDir is set by ProcessOptions()
+      HandleExtractData(OutDir);
+      Show('Tiddlywiki written in directory ''' + OutDir + '''.');
+      Terminate;
+      Exit;
+    end;
 
-  //Write html tiddlywiki file
-  If HasOption('k','') then
-  begin
-    PrintHeader();
-    Show('Extracting tiddlywiki5 html file.');
-    //OutDir is set by ProcessOptions()
-    HandleExtractData(OutDir);
-    Show('Tiddlywiki written in directory ''' + OutDir + '''.');
+    //Print header (includes version number)
+    If HasOption('v','') then
+    begin
+      PrintHeader();
+      Terminate;
+      Exit;
+    end;
+
+    { Run main function - options have been written to twexeoptions in twexemain}
+    Twexemain.TwexeMain(OrigExeFile, FileArgs);
+
+    // stop program loop
     Terminate;
-    Exit;
+
+  except on E:Exception do
+    begin
+      Error('Unhandled exception: ' + E.ToString);
+      WaitForUser();
+      Terminate;
+    end;
   end;
-
-  //Print header (includes version number)
-  If HasOption('v','') then
-  begin
-    PrintHeader();
-    Terminate;
-    Exit;
-  end;
-
-  { Run main function - options have been written to twexeoptions in twexemain}
-  Twexemain.TwexeMain(OrigExeFile, FileArgs);
-
-  // stop program loop
-  Terminate;
 end;
 
 constructor TTwexeApp.Create(TheOwner: TComponent);
