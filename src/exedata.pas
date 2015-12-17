@@ -6,7 +6,7 @@ interface
 
 uses
   // Free pascal units
-  Classes, SysUtils, Zipper, Process, dateutils,
+  Classes, SysUtils, Zipper, Process, dateutils, md5,
 
   //Project units 
   logger,fileops,
@@ -460,8 +460,11 @@ begin
 end;
 
 function GetStoragePath():string;
+Var
+  DirHash: string;
 begin
-   Result:= ConcatPaths([GetTempDir(),GetEXEName()+'.twx']) + DirectorySeparator;
+   DirHash := MD5Print(MD5String(ExtractFilePath(GetEXEFile())));
+   Result:= ConcatPaths([GetTempDir(),DirHash+'_'+GetEXEName()+'.twx']) + DirectorySeparator;
 end;
 
 function GetUnZipPath():string;
