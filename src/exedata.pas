@@ -186,8 +186,8 @@ begin
         begin
           Aprocess.Input.Write(EOFInd[1],Length(EOFInd));
           Log(Format('Wrote EOF after external proc input: %d bytes.',[Length(EOFInd)]));
-        end;
-        AProcess.CloseInput;}
+        end;}
+        AProcess.CloseInput;
       end;
 
       //Monitor process, appending output and terminating it
