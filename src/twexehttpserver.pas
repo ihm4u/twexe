@@ -299,11 +299,11 @@ begin
       //to GetEXEPath() - the path of the twixie file.
       if Length(FBackupDir) = 0 then
         FBackupDir := GetEXEPath()
-      else if FBackupDir[Length(FBackupDir)] <> DirectorySeparator then
+      else if (FBackupDir[1] <> DirectorySeparator) and (FBackupDir[2]<>':') then
         FBackupDir := ConcatPaths([GetEXEPath(), FBackupDir]);
 
-      BakFile := ConcatPaths([FBackupDir, ExeName + GetOSEXEExt()]);
-      OK := MakeBackup(GetEXEFile(), BakFile);
+      BakFile := ConcatPaths([FBackupDir, ExtractFileName(ExeNameToWikiName(GetEXEName))]);
+      OK := MakeBackup(FWikiFile, BakFile);
 
       //Append received wiki to executable
       AppendFile(GetEXEFile(), FWikiFile);
