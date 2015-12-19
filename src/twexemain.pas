@@ -40,10 +40,12 @@ var
 procedure TwexeMain(
   const OrigExeFile: string;
   const FileArgs:array of string);
-
 procedure PrintHeader();
 procedure HandleExtractData(const Dir:string='');
 function WaitForUser(txt:string='Press enter to exit...'):boolean;
+
+//used from windowslib or unixlib
+procedure CleanupOnExit();
 
 implementation
   var
@@ -319,10 +321,9 @@ begin
       end
       else
         logger.Error('Sorry, no wiki file found in the arguments.');
-
       Exit;
-    except
-      WaitForUser();
+    finally
+      CleanupOnExit();
     end;
   end;
 
@@ -357,6 +358,7 @@ begin
   If Restarting then
     Exit;
 
+  InstallExitHandler();
   //Extract data bundled in executable
   try
     HandleExtractData();
@@ -371,6 +373,7 @@ begin
   except
     WaitForUser();
     ExitCode:=1;
+    CleanupOnExit();
     Exit;
   end;
 
@@ -387,6 +390,7 @@ begin
     finally
       If Assigned(Serv) then
          FreeAndNil(Serv);
+      CleanupOnExit();
     end;
   except on E:Exception do
     begin
@@ -395,8 +399,12 @@ begin
       Exit;
     end;
   end;
+end;
 
-
+procedure CleanupOnExit();
+begin
+    Log('Cleaning up temporary files.');
+    DeleteDirectory(GetStoragePath());
 end;
 
 end.

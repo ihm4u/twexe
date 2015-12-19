@@ -152,6 +152,7 @@ begin
   except on E:Exception do
     begin
       Error('Unhandled exception: ' + E.ToString);
+      CleanupOnExit();
       WaitForUser();
       Terminate;
     end;

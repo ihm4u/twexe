@@ -26,8 +26,36 @@ function FindZipHdr(const FileName: string; const StartAt: int64 = 0): int64;
 function FindZipHdr(Stream: TStream; const StartAt: int64 = 0): int64;
 procedure ForEachFile(const WildPath: string; Func: TFileFuncName;
   Params: TFPList; const Flags: longint = faAnyFile and faDirectory);
+procedure DeleteDirectory(const Dir: string);
 
 implementation
+//
+// Delete directories recursively
+//
+procedure DeleteDirectory(const Dir: string);
+var
+  F: TSearchRec;
+begin
+  if FindFirst(Dir + DirectorySeparator +'*', faAnyFile, F) = 0 then begin
+    try
+      repeat
+        if (F.Attr and faDirectory <> 0) then begin
+          if (F.Name <> '.') and (F.Name <> '..') then begin
+            DeleteDirectory(ConcatPaths([Dir,F.Name]));
+          end;
+        end else begin
+          //LogFmt('Deleting %s', [ConcatPaths([Dir,F.Name])]);
+          DeleteFile(ConcatPaths([Dir,F.Name]));
+        end;
+      until FindNext(F) <> 0;
+    finally
+      FindClose(F);
+    end;
+    //LogFmt('Deleting %s/', [Dir]);
+    RemoveDir(Dir);
+  end;
+end;
+
 //
 // Get File name without extension
 //

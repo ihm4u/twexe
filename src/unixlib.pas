@@ -10,8 +10,10 @@ uses
 procedure SetExecutePermission(const FileName: string);
 function GetOSEXEExt():String;
 function GetMimeType(const Ext:string):string;
+function InstallExitHandler():boolean;
 
 implementation
+Uses twexemain; //For CleanupOnExit()
 var
   FMimeLoaded: boolean;
   FMimeTypesFile: string;
@@ -34,6 +36,34 @@ end;
 function GetOSEXEExt():String;
 begin
   Result:='';
+end;
+
+procedure UnixHandleSignal(Sig : cint);cdecl;
+begin
+  CleanupOnExit();
+end;
+
+function InstallExitHandler():boolean;
+Var
+   oa,na : PSigActionRec;
+
+begin
+   Result := False;
+   new(na);
+   new(oa);
+   na^.sa_Handler:=SigActionHandler(@UnixHandleSignal);
+   fillchar(na^.Sa_Mask,sizeof(na^.sa_mask),#0);
+   na^.Sa_Flags:=SA_ONESHOT;
+   {$ifdef Linux}               // Linux specific
+     na^.Sa_Restorer:=Nil;
+   {$endif}
+   if (fpSigAction(SIGINT, na, oa)<>0)
+      or (fpSigAction(SIGTERM, na, oa) <> 0)
+      or (fpSigAction(SIGHUP, na, oa) <> 0)
+      or (fpSigAction(SIGPIPE, na, oa) <> 0) then
+     Result := False
+   else
+     Result := True;
 end;
 
 end.
