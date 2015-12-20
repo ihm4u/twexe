@@ -297,8 +297,10 @@ begin
       //Make backup in specified Backup Dir
       //If not absolute, backup dir is in reference
       //to GetEXEPath() - the path of the twixie file.
-      if Length(FBackupDir) = 0 then
+      if Length(Trim(FBackupDir)) = 0 then
         FBackupDir := GetEXEPath()
+      else if (FBackupDir = '.') then
+        FBackupDir := ConcatPaths([GetEXEPath(),GetEXEName() + '.bak'])
       else if (FBackupDir[1] <> DirectorySeparator) and (FBackupDir[2]<>':') then
         FBackupDir := ConcatPaths([GetEXEPath(), FBackupDir]);
 
