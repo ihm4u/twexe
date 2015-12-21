@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="9"/>
+    <BuildModes Count="1" Active="Release">
+      <Item1 Name="Release">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="../build/$(TargetCPU)-$(TargetOS)/twexe"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir)"/>
+            <UnitOutputDirectory Value="../build/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <SmartLinkUnit Value="True"/>
+            <Optimizations>
+              <OptimizationLevel Value="3"/>
+            </Optimizations>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <GenerateDebugInfo Value="False"/>
+            </Debugging>
+            <LinkSmart Value="True"/>
+          </Linking>
+          <Other>
+            <ExecuteBefore>
+              <Command Value="$(make) -f $(ProjSrcPath)/../Makefile version"/>
+              <ShowAllMessages Value="True"/>
+              <CompileReasons Compile="False" Run="False"/>
+            </ExecuteBefore>
+            <ExecuteAfter>
+              <ScanForMakeMsgs Value="True"/>
+            </ExecuteAfter>
+          </Other>
+        </CompilerOptions>
+      </Item1>
+    </BuildModes>
+    <Units Count="22">
+      <Unit0>
+        <Filename Value="twexe.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="141"/>
+        <CursorPos Y="148"/>
+        <UsageCount Value="201"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="twexehttpserver.pas"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="297"/>
+        <CursorPos X="72" Y="305"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="twexemain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <TopLine Value="392"/>
+        <CursorPos X="39" Y="392"/>
+        <UsageCount Value="200"/>
+        <Bookmarks Count="1">
+          <Item0 X="33" Y="274"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="wikiops.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="157"/>
+        <CursorPos Y="173"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="version.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="200"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="exedata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="461"/>
+        <CursorPos X="49" Y="472"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="fileops.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="51"/>
+        <CursorPos X="60" Y="57"/>
+        <UsageCount Value="200"/>
+        <Bookmarks Count="1">
+          <Item0 X="36" Y="125" ID="1"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="textops.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="200"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="logger.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="225"/>
+        <CursorPos X="22" Y="236"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="windowslib.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="63"/>
+        <CursorPos X="11" Y="77"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="unixlib.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="3"/>
+        <CursorPos Y="14"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="httpdefs.pp"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="HTTPDefs"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="21"/>
+        <CursorPos X="33" Y="32"/>
+        <UsageCount Value="200"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="fphttpserver.pp"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="163"/>
+        <CursorPos X="2" Y="169"/>
+        <UsageCount Value="200"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="fphttpclient.pp"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="276"/>
+        <CursorPos X="6" Y="285"/>
+        <UsageCount Value="202"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="upgrade.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="64"/>
+        <CursorPos X="16" Y="53"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="C:/apps/lazarus/fpc/2.6.4/source/packages/fcl-net/src/ssockets.pp"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="6" Y="15"/>
+        <UsageCount Value="10"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="sslsockets.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="13"/>
+        <CursorPos X="50" Y="22"/>
+        <UsageCount Value="10"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="fpopenssl.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="502"/>
+        <CursorPos X="8" Y="511"/>
+        <UsageCount Value="10"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="C:/apps/fpc/3.0.0/src/rtl/objpas/sysutils/sysutilh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="302"/>
+        <CursorPos X="13" Y="310"/>
+        <UsageCount Value="5"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="C:/apps/fpc/3.0.0/src/rtl/objpas/sysutils/sysutils.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="152"/>
+        <CursorPos X="9" Y="156"/>
+        <UsageCount Value="2"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="/usr/lib/fpc/src/packages/hash/src/md5.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="154"/>
+        <CursorPos X="10" Y="166"/>
+        <UsageCount Value="8"/>
+      </Unit20>
+      <Unit21>
+        <Filename Value="/usr/lib/fpc/src/rtl/wince/windows.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="36"/>
+        <CursorPos X="5" Y="42"/>
+        <UsageCount Value="8"/>
+      </Unit21>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="upgrade.pas"/>
+        <Caret Line="116" Column="20" TopLine="116"/>
+      </Position1>
+      <Position2>
+        <Filename Value="upgrade.pas"/>
+        <Caret Line="93" Column="3" TopLine="76"/>
+      </Position2>
+      <Position3>
+        <Filename Value="exedata.pas"/>
+        <Caret Line="185" Column="33" TopLine="185"/>
+      </Position3>
+      <Position4>
+        <Filename Value="exedata.pas"/>
+        <Caret Column="37"/>
+      </Position4>
+      <Position5>
+        <Filename Value="exedata.pas"/>
+        <Caret Line="19" Column="16" TopLine="9"/>
+      </Position5>
+      <Position6>
+        <Filename Value="exedata.pas"/>
+        <Caret Line="55" Column="19" TopLine="44"/>
+      </Position6>
+      <Position7>
+        <Filename Value="exedata.pas"/>
+        <Caret Line="67" Column="33" TopLine="57"/>
+      </Position7>
+      <Position8>
+        <Filename Value="windowslib.pas"/>
+        <Caret Line="45" Column="14" TopLine="39"/>
+      </Position8>
+      <Position9>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="46" TopLine="34"/>
+      </Position9>
+      <Position10>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="384" Column="21" TopLine="374"/>
+      </Position10>
+      <Position11>
+        <Filename Value="windowslib.pas"/>
+        <Caret Line="50" Column="14" TopLine="43"/>
+      </Position11>
+      <Position12>
+        <Filename Value="unixlib.pas"/>
+        <Caret Line="50" Column="18" TopLine="44"/>
+      </Position12>
+      <Position13>
+        <Filename Value="unixlib.pas"/>
+        <Caret Line="51" TopLine="50"/>
+      </Position13>
+      <Position14>
+        <Filename Value="unixlib.pas"/>
+        <Caret Line="42" Column="17" TopLine="36"/>
+      </Position14>
+      <Position15>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="81" Column="25" TopLine="70"/>
+      </Position15>
+      <Position16>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="362" Column="6" TopLine="361"/>
+      </Position16>
+      <Position17>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="237" Column="69" TopLine="229"/>
+      </Position17>
+      <Position18>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="48" Column="19" TopLine="42"/>
+      </Position18>
+      <Position19>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="374" Column="8" TopLine="366"/>
+      </Position19>
+      <Position20>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="401" Column="7" TopLine="395"/>
+      </Position20>
+      <Position21>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="407" TopLine="395"/>
+      </Position21>
+      <Position22>
+        <Filename Value="twexemain.pas"/>
+        <Caret Line="409" TopLine="397"/>
+      </Position22>
+      <Position23>
+        <Filename Value="fileops.pas"/>
+        <Caret Line="54" Column="29" TopLine="44"/>
+      </Position23>
+      <Position24>
+        <Filename Value="windowslib.pas"/>
+        <Caret Line="65" Column="42" TopLine="56"/>
+      </Position24>
+      <Position25>
+        <Filename Value="windowslib.pas"/>
+        <Caret Line="61" Column="55" TopLine="51"/>
+      </Position25>
+      <Position26>
+        <Filename Value="windowslib.pas"/>
+        <Caret Line="59" Column="23" TopLine="51"/>
+      </Position26>
+      <Position27>
+        <Filename Value="windowslib.pas"/>
+        <Caret Line="51" Column="16" TopLine="48"/>
+      </Position27>
+      <Position28>
+        <Filename Value="windowslib.pas"/>
+        <Caret Line="67" Column="37" TopLine="52"/>
+      </Position28>
+      <Position29>
+        <Filename Value="windowslib.pas"/>
+        <Caret Line="66" Column="29" TopLine="58"/>
+      </Position29>
+      <Position30>
+        <Filename Value="fileops.pas"/>
+        <Caret Line="29" Column="26" TopLine="20"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectSession>
+  <Debugging>
+    <BreakPoints Count="5">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="exedata.pas"/>
+        <Line Value="267"/>
+      </Item1>
+      <Item2>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="exedata.pas"/>
+        <Line Value="250"/>
+      </Item2>
+      <Item3>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="fileops.pas"/>
+        <Line Value="323"/>
+      </Item3>
+      <Item4>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="logger.pas"/>
+        <Line Value="62"/>
+      </Item4>
+      <Item5>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="twexe.lpr"/>
+        <Line Value="113"/>
+      </Item5>
+    </BreakPoints>
+  </Debugging>
+</CONFIG>
