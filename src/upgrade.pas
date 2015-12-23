@@ -116,11 +116,11 @@ Var
   UpgDir,UpgFile, NewVer: string;
 begin
   Result := False;
-  if NewerVersionOnline(NewVer) then
-  begin
-    UpgDir := ConcatPaths([GetStoragePath(),'_upg']);
-    UpgFile := ConcatPaths([UpgDir,ExtractFileName(GetEXEFile())]);
-    try
+  try
+    if NewerVersionOnline(NewVer) then
+    begin
+      UpgDir := ConcatPaths([GetStoragePath(),'_upg']);
+      UpgFile := ConcatPaths([UpgDir,ExtractFileName(GetEXEFile())]);
       MakeDirs(UpgDir + DirectorySeparator);
       Log('Downloading upgrade.');
       GetFromURL(UPGRADE_URL,UpgFile);
@@ -130,9 +130,9 @@ begin
       Show('Upgraded to version '+NewVer);
       Result := True;
       ExitCode := 0;
-    except on E:Exception do
-      Error('Unable to upgrade: '+E.ToString);
     end;
+  except on E:Exception do
+    Error('Unable to upgrade: '+E.ToString);
   end;
 end;
 
