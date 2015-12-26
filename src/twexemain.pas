@@ -173,7 +173,7 @@ implementation
     except
       on E:Exception do
       begin
-        logger.Error('Error extracting data: '+E.Message);
+        logger.Error('Error extracting data: '+E.toString());
         ExitCode := 2;
         Raise;
       end;

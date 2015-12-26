@@ -29,7 +29,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="/usr/lib/fpc/src/packages/fcl-web/units/i386-linux"/>
+            <OtherUnitFiles Value="/usr/lib/fpc/src/packages/fcl-web/units/i386-linux/"/>
             <UnitOutputDirectory Value="../build/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>

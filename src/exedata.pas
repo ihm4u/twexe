@@ -293,7 +293,7 @@ begin
       end;
     on E: Exception do
       begin
-        logger.Error('Unable to create '''+ NewExe + ''': ' + E.Message);
+        logger.Error('Unable to create '''+ NewExe + ''': ' + E.toString());
         ExitCode := 4;
         Raise;
       end;
@@ -366,6 +366,7 @@ begin
   FDir := Dir;
   If Dir='' then
     FDir := GetUnZipPath();
+  MakeDirs(FDir);
   CB := TCallacks.Create;
   UnZipper := TUnZipper.Create;
   UnZipper.OnOpenInputStream := @CB.OnOpenZippedStream;

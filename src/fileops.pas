@@ -177,25 +177,29 @@ begin
   try
     //Get each one of the Paths recursively: e.g. for 'ok/ok1/ok2/'
     //make a list: [ 'ok/ok1/ok2', 'ok/ok1', 'ok', '']
-    D := Dirs;
-    L := TStringList.Create;
-    repeat
-      D := ExtractFileDir(D);
-      L.Add(D);
-    until (D = '') or (AnsiLastChar(D) = DirectorySeparator);
+    try
+      D := Dirs;
+      L := TStringList.Create;
+      repeat
+        D := ExtractFileDir(D);
+        L.Add(D);
+      until (D = '') or (AnsiLastChar(D) = DirectorySeparator);
 
-    //Create each of the needed directories
-    OK := True;
-    for i := L.Count - 2 downto 0 do
-    begin
-      if not DirectoryExists(L[i]) then
-        OK := OK and CreateDir(L[i]);
+      //Create each of the needed directories
+      OK := True;
+      for i := L.Count - 2 downto 0 do
+      begin
+        if not DirectoryExists(L[i]) then
+          OK := OK and CreateDir(L[i]);
+      end;
+      Result := OK;
+    finally
+      If Assigned(L) then
+        FreeAndNil(L);
     end;
-
-    Result := OK;
-  except
+  except on E:Exception do
+    Raise Exception.CreateFmt('Unable to create directory ''%s'': %s',[Dirs,E.toString]);
   end;
-  FreeAndNil(L);
 end;
 
 function CopyFile(FromName: string; ToName: string; DeleteOriginal: boolean = False;
