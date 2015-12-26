@@ -35,6 +35,7 @@ type
 var
   TwexeOptions : TTwexeOptions;
   ConversionOutDir: string='';
+  ServerPort: Integer;
 
 // These are used from twexe.lpr
 procedure TwexeMain(
@@ -107,23 +108,41 @@ implementation
     Result := Serv;
   end;
 
-  function StartServer(): TTwexeHTTPServer;
+  function StartServer(const Port:Word=0): TTwexeHTTPServer;
   var
-    Port: word;
-    TryAgain : boolean;
+    FPort: word;
+    TryAgain : boolean=False;
   begin
-    Port := 8080;
-    TryAgain := True;
-    repeat
-      Result := TryPort(Port,TryAgain,StoreReqFinished);
+    If Port = 0 then  //Find a free port between 8080 and 8095
+    begin
+      FPort := 8080;
+      TryAgain := True;
+      repeat
+        Result := TryPort(FPort,TryAgain,StoreReqFinished);
 
-      if Result = nil then
-        Inc(Port)
-    until (Result <> nil)
-      or (Port > 8095)
-      or not TryAgain
-      or StopRequested
-      or StoreReqFinished;
+        if Result = nil then
+          Inc(FPort)
+      until (Result <> nil)
+        or (FPort > 8095)
+        or not TryAgain
+        or StopRequested
+        or StoreReqFinished;
+    end
+    else //Port specified by user
+    begin
+      Result := TryPort(Port,TryAgain,StoreReqFinished);
+      //Try with the same port:
+      //Wine takes a while to close sockets
+      //since they remain in TIME_WAIT state for a time
+      If Result = Nil then
+      begin
+        repeat
+          Log('Trying again in about 20 seconds...');
+          Sleep(22333); //To honor the Holy Trinity, and the union with Humanity
+          Result := TryPort(Port,TryAgain,StoreReqFinished);
+        until StopRequested or StoreReqFinished or not TryAgain;
+      end;
+    end;
   end;
 
   procedure PrintHeader();
@@ -210,7 +229,7 @@ implementation
     end;
   end;
 
-  procedure RestartEXE(const StartBrowser:boolean=False);
+  procedure RestartEXE(const StartBrowser:boolean=False; const Port:word=0);
   Var
     Out,Opts:String;
   begin
@@ -222,11 +241,16 @@ implementation
     If StartBrowser then
       Opts := '';
 
+    //Bind to the specified port (b/c we come from a store request)
+    if Port <> 0 then
+      Opts := Opts + ' -t ' + IntToStr(Port);
+
     //This causes the server to wait for all requests
     //to be finished
     If Assigned(Serv) then
       FreeAndNil(Serv);
 
+    LogFmt('Restarting ''%s'' ''%s''',[GetEXEFile(),Opts]);
     RunCmd(GetEXEFile(),Opts,Out,True);
     Restarting := True;
     //Ignore WaitForUser() if somebody calls
@@ -334,7 +358,7 @@ begin
     //finish, if we had to the case of a restart because
     //the shadow file was in use
     Sleep(200);
-    if not IAmShadow()and RunShadow(toOpenBrowser in TwexeOptions) then
+    if not IAmShadow()and RunShadow(toOpenBrowser in TwexeOptions,ServerPort) then
     begin
       Log('Exiting, shadow created and running.');
       Exit;
@@ -383,10 +407,10 @@ begin
       //a little to give a little time for the previous exe
       //to finish properly (this is needed in addition to the shadow sleep)
       Sleep(200);
-      Serv:=StartServer();
-      //FIXME: Cleanup temp files: shadow _exes in tmp, unzip dir
-      If StoreReqFinished and not StopRequested then
-        RestartEXE();
+      Serv:=StartServer(ServerPort);
+
+      If StoreReqFinished and not StopRequested and Assigned(Serv) then
+        RestartEXE(False,Serv.Port);
     finally
       If Assigned(Serv) then
          FreeAndNil(Serv);

@@ -50,7 +50,7 @@ begin
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('pvo:sz:hk::r',[],Opts,NonOpts);
+    ErrorMsg:=CheckOptions('pvo:sz:hk::rt:',[],Opts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -78,6 +78,16 @@ begin
       OutDir := Opts.ValueFromIndex[i]
     else
       OutDir := GetEXEPath();
+
+    //Process t option - port number to listen for http server
+    i:=Opts.IndexOfName('t');
+    If i <> -1 then
+    begin
+      ServerPort := StrToInt(Opts.ValueFromIndex[i]);
+      LogFmt('User specified port: %d',[ServerPort]);
+    end
+    else
+      ServerPort := 0; //Try different ports
 
     //Process h option
     if HasOption('h','help') then
