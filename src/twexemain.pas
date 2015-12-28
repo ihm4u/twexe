@@ -52,6 +52,7 @@ procedure TwexeMain(
 procedure PrintHeader();
 procedure HandleExtractData(const Dir:string='');
 function WaitForUser(txt:string='Press enter to exit...'):boolean;
+procedure StopRunningServer();
 
 //used from windowslib or unixlib
 procedure CleanupOnExit();
@@ -311,6 +312,11 @@ begin
   Result:=True;
 end;
 
+procedure StopRunningServer();
+begin
+  TTwexeHTTPServer.SendStopRequest();
+end;
+
 procedure StopRunningServerAndRestart();
 begin
   //This is used when server is already running
@@ -332,6 +338,7 @@ procedure TwexeMain(
     i: Integer;
 
 begin
+  //FIXME: LogVerbose needs to be behind an interface
   LogVerbose := True;
   LogDebug := 0;
   Twixie := '';
@@ -460,4 +467,6 @@ begin
     DeleteDirectory(GetStoragePath());
 end;
 
+initialization
+  LogVerbose:=True;
 end.

@@ -114,17 +114,23 @@ begin
     SrvURL := ReadLastURL()
   else
     SrvURL := BaseURL;
-  with TFPHttpClient.Create(nil) do
-    try
-      Result := False;
-      Resp := TrimRight(Get(SrvURL + StopURI));
-      if Resp = 'OK' then
-        Result := True
-      else
-        logger.Error(SrvURL + ' responded ''' + Resp + ''' to stop request.');
-    finally
-      Free;
-    end;
+  If SrvURL = '' then
+    LogFmt('Server for ''%s'' does not seem to be running.',[GetEXEName()])
+  else
+  begin
+    with TFPHttpClient.Create(nil) do
+      try
+        Result := False;
+        LogFmt('Stopping server at ''%s''',[SrvURL]);
+        Resp := TrimRight(Get(SrvURL + StopURI));
+        if Resp = 'OK' then
+          Result := True
+        else
+          logger.Error(SrvURL + ' responded ''' + Resp + ''' to stop request.');
+      finally
+        Free;
+      end;
+  end;
 end;
 
 class function TTwexeHTTPServer.ReadLastURL(): string;

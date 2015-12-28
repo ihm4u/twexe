@@ -50,7 +50,7 @@ begin
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('pvo:sz:hk::r::t:',[],CmdLOpts,NonOpts);
+    ErrorMsg:=CheckOptions('epvo:sz:hk::r::t:',[],CmdLOpts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -164,6 +164,15 @@ begin
       Exit;
     end;
 
+    //End already running server
+    If HasOption('e') then
+    begin
+      PrintHeader();
+      twexemain.StopRunningServer();
+      Terminate;
+      Exit;
+    end;
+
     { Run main function - options have been written to twexemain.Opts }
     Twexemain.TwexeMain(OrigExeFile, FileArgs);
 
@@ -228,8 +237,12 @@ begin
   TextColor(Blue);
   writeln(#9,'-v');
   TextColor(DarkGray);
-  writeln(#9,#9,Format('Print version number and exit.'
-    ,[GetEXEName()+'.html']));
+  writeln(#9,#9,'Print version number and exit.');
+
+  TextColor(Blue);
+  writeln(#9,'-e');
+  TextColor(DarkGray);
+  writeln(#9,#9,'Terminate running server.');
 
   ResetColors();
 
