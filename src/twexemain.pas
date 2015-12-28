@@ -31,11 +31,19 @@ uses
 
 type
   TTwexeOption = (toOpenBrowser,toAllowRemoteClients,toProgramaticRun);
-  TTwexeOptions = set of TTwexeOption;
+  TTwexeOptions = record
+    Flags:set of TTwexeOption;
+    ConversionOutDir: string;
+    ServerPort: Integer;
+    ServerBindAddress: string;
+  end;
+
 var
-  TwexeOptions : TTwexeOptions;
-  ConversionOutDir: string='';
-  ServerPort: Integer;
+  Opts : TTwexeOptions =
+    (Flags: [];
+     ConversionOutDir: '';
+     ServerPort: 0;
+     ServerBindAddress: '');
 
 // These are used from twexe.lpr
 procedure TwexeMain(
@@ -59,10 +67,10 @@ implementation
   var
     Serv: TTwexeHTTPServer;
   begin
-    Serv := TTwexeHTTPServer.Create;
+    Serv := TTwexeHTTPServer.Create(Opts.ServerBindAddress);
     try
       //Server should open browser as soon as it is listening
-      Serv.OpenBrowser := (toOpenBrowser in TwexeOptions);
+      Serv.OpenBrowser := (toOpenBrowser in Opts.Flags);
       Serv.BaseDir := GetServerDocPath();
 
       Serv.StopRequested := False;
@@ -206,10 +214,10 @@ implementation
   begin
     Result:=False;
     Ext := GetOSEXEExt();
-    If ConversionOutDir = '' then
-      ConversionOutDir := ExtractFileDir(ExpandFileName(DataFile));
+    If Opts.ConversionOutDir = '' then
+      Opts.ConversionOutDir := ExtractFileDir(ExpandFileName(DataFile));
 
-    OutExeFN := ConcatPaths([ConversionOutDir,FileNameNoExt(DataFile) + Ext]);
+    OutExeFN := ConcatPaths([Opts.ConversionOutDir,FileNameNoExt(DataFile) + Ext]);
     Show('Generating ''' + OutExeFN + '''...');
     OK:=fileops.CopyFile(GetEXEFile(),OutExeFN);
     
@@ -229,21 +237,42 @@ implementation
     end;
   end;
 
+  function GetInheritableOpts(SkipBrowserOpt:boolean=False;
+                              SkipPortOpt   :boolean=False):string;
+  Var
+    ShOpts:string='';
+  begin
+    //Propagate flag to not open the browser
+    If not SkipBrowserOpt and  (toOpenBrowser in Opts.Flags) then
+      ShOpts:=''
+    else
+      ShOpts:=' -s';
+
+    //Propagate http port flag
+    If not SkipPortOpt and (Opts.ServerPort <> 0) then
+      ShOpts:= ShOpts + ' -t ' + IntToStr(Opts.ServerPort);
+
+    //Propagate bind address flag
+    If toAllowRemoteClients in Opts.Flags then
+      ShOpts:= ShOpts + ' -r ' + Opts.ServerBindAddress;
+
+    Result:=ShOpts;
+  end;
+
   procedure RestartEXE(const StartBrowser:boolean=False; const Port:word=0);
   Var
     Out,Opts:String;
   begin
 
     Out := '';
-    //Restart executable without opening the browser
-    Opts := ' -s';
 
     If StartBrowser then
-      Opts := '';
+      Opts := ''
+    else  //Restart executable without opening the browser
+      Opts := ' -s';
 
-    //Bind to the specified port (b/c we come from a store request)
-    if Port <> 0 then
-      Opts := Opts + ' -t ' + IntToStr(Port);
+    //Add all other propagated options except the browser option
+    Opts := Opts + ' -t ' + IntToStr(Port) + ' ' + GetInheritableOpts(True,True);
 
     //This causes the server to wait for all requests
     //to be finished
@@ -272,7 +301,7 @@ function WaitForUser(txt:string='Press enter to exit...'):boolean;
 begin
   {$ifdef windows} // So that the console doesnt close
   If not DoNotWaitForUser and
-     not (toProgramaticRun in TwexeOptions) then
+     not (toProgramaticRun in Opts.Flags) then
   begin
     WriteLn(txt);
     Readln;
@@ -337,7 +366,7 @@ begin
         Show(Format('Your new twixie: ''%S''',[Twixie]));
 
         //Open browser and server unless -s flag was specified
-        If toOpenBrowser in TwexeOptions then
+        If toOpenBrowser in Opts.Flags then
         begin
           WaitForUser('Press enter to run your new twixie...');
           RunCmd(Twixie,'',O,True);
@@ -358,7 +387,7 @@ begin
     //finish, if we had to the case of a restart because
     //the shadow file was in use
     Sleep(200);
-    if not IAmShadow()and RunShadow(toOpenBrowser in TwexeOptions,ServerPort) then
+    if not IAmShadow()and RunShadow(GetInheritableOpts()) then
     begin
       Log('Exiting, shadow created and running.');
       Exit;
@@ -407,7 +436,7 @@ begin
       //a little to give a little time for the previous exe
       //to finish properly (this is needed in addition to the shadow sleep)
       Sleep(200);
-      Serv:=StartServer(ServerPort);
+      Serv:=StartServer(Opts.ServerPort);
 
       If StoreReqFinished and not StopRequested and Assigned(Serv) then
         RestartEXE(False,Serv.Port);

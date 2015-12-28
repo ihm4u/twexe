@@ -73,7 +73,7 @@ type
   public
     class function ReadLastURL(): string;
     class function SendStopRequest(const BaseURL: string = ''): boolean;
-    constructor Create; //no override needed b/c there is no ctor in parent;
+    constructor Create(const BindAddress:string; AnOwner:TComponent=Nil);
 
     property BaseDir: string read FBaseDir write SetBaseDir;
     property SavingConfigUpdated: boolean read FSavingConfigUpdated
@@ -87,6 +87,9 @@ type
   end;
 
 implementation
+
+uses
+  twexemain; //For Opts.Flags
 
 { Utilities }
 
@@ -140,12 +143,12 @@ begin
   end;
 end;
 
-constructor TTwexeHTTPServer.Create;
+constructor TTwexeHTTPServer.Create(const BindAddress:string; AnOwner:TComponent=Nil);
 begin
   StopRequested := False;
   StoreRequestDone := False;
-  Address:='127.0.0.1';
-  inherited;
+  Address := BindAddress;
+  inherited Create(AnOwner);
 end;
 
 procedure TTwexeHttpServer.StartServerSocket;
@@ -157,13 +160,20 @@ begin
 end;
 
 procedure TTwexeHTTPServer.HandleOnStartListening;
+var
+  AllIfaces:string='';
+
 begin
   if Self.Address = '' then
-    Self.URL := 'http://127.0.0.1:' + IntToStr(Self.Port)
+  begin
+    Self.URL := 'http://127.0.0.1:' + IntToStr(Self.Port);
+    AllIfaces := ' (all interfaces)';
+  end
   else
     Self.URL := 'http://' + Self.Address + ':' + IntToStr(Self.Port);
   //This is the first line shown after the "Trying port" line
-  Show(LineEnding + '''' + GetEXEName() + '''' + ' running on ' + Self.URL);
+  Show(LineEnding + '''' + GetEXEName() + '''' + ' running on ' + Self.URL
+       + AllIfaces);
   StoreLastURL(Self.URL);
 
   if (FOpenBrowser) then
@@ -206,10 +216,10 @@ begin
     begin
       Result := True;
       //Update saving config if it hasnt been done
-      if not SavingConfigUpdated then
+      if not SavingConfigUpdated and not (toAllowRemoteClients in Opts.Flags) then
       begin
         //Make sure the saving tab in the control panel is pointing
-        //to the twexe server
+        //to the twexe server if we have a local server
         try
           TmpWikiFN := ExtractFilePath(FN) + '_orig_' + ExtractFileName(FN);
           fileops.MoveFile(FN, TmpWikiFN);

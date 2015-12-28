@@ -47,7 +47,7 @@ function GetEXEName():String;
 function GetEXEPath():String;
 
 //Run a shadow executable of the current one
-function RunShadow(const OpenBrowser:boolean; const Port:Word=0):Boolean;
+function RunShadow(const ShOpts:string):Boolean;
 
 //Returns True if the currently running process is a shadow
 function IAmShadow():Boolean;
@@ -256,13 +256,12 @@ end;
 // Run copy of executable to allow writing over the original executable
 // The caller is responsible for exiting
 //
-function RunShadow(const OpenBrowser:boolean; const Port:Word=0):Boolean;
+function RunShadow(const ShOpts:string):Boolean;
 Var
   OK:Boolean;
   NewExe,Args:string;
   Out:string;
   Cmd:string;
-  Opts: string;
 begin
   Out:='';
   Result:=False;
@@ -271,19 +270,9 @@ begin
   if IAmShadow() then
     Exit;
 
-  //Propagate flag to not open the browser
-  If OpenBrowser then
-    Opts:=''
-  else
-    Opts:=' -s';
-
-  //Propagate http port flag
-  If Port <> 0 then
-    Opts:= Opts + ' -t ' + IntToStr(Port);
-
   //Copy executable to shadow file
   NewExe := GetShadowFile();
-  Args :=  '-z "' + ParamStr(0) + '"' + Opts;
+  Args :=  '-z "' + ParamStr(0) + '"' + ShOpts;
   Log('Creating shadow: '+NewExe+' '+Args);
   try
     //Copy executable section of exe to shadow file

@@ -36,21 +36,21 @@ type
 
 procedure TTwexeApp.ProcessOptions();
 Var
-  Opts: TStrings;
+  CmdLOpts: TStrings;
   NonOpts: TStrings;
   i: Integer;
   ErrorMsg: string;
 begin
   //Default values
-  twexemain.TwexeOptions := [toOpenBrowser];
+  Opts.Flags := [toOpenBrowser];
 
   // parse options
   try
-    Opts := TStringList.Create;
+    CmdLOpts := TStringList.Create;
     NonOpts := TStringList.Create;
 
     // check parameters
-    ErrorMsg:=CheckOptions('pvo:sz:hk::rt:',[],Opts,NonOpts);
+    ErrorMsg:=CheckOptions('pvo:sz:hk::r::t:',[],CmdLOpts,NonOpts);
     if ErrorMsg<>'' then
     begin
       PrintHeader();
@@ -60,34 +60,35 @@ begin
     end;
 
     //Process z option - internal option for original exe path
-    i:=Opts.IndexOfName('z');
+    i:=CmdLOpts.IndexOfName('z');
     If i <> -1 then
     begin
-      OrigExeFile:=Opts.ValueFromIndex[i];
+      OrigExeFile:=CmdLOpts.ValueFromIndex[i];
       exedata.OriginalExeFile:=OrigExeFile; //FIXME: this is lousy
     end;
 
-    //Process o option - output file for conversion
-    i:=Opts.IndexOfName('o');
+    //Process o option - output directory for conversion
+    i:=CmdLOpts.IndexOfName('o');
     If i <> -1 then
-      ConversionOutDir:=Opts.ValueFromIndex[i];
+      Opts.ConversionOutDir:=CmdLOpts.ValueFromIndex[i];
 
-    //Process k option - extract tiddlywiki
-    i:=Opts.IndexOfName('k');
+    //Process k option - extract tiddlywiki in optional directory
+    //OutDir is used to call HandleExtractData
+    i:=CmdLOpts.IndexOfName('k');
     If i <> -1 then
-      OutDir := Opts.ValueFromIndex[i]
+      OutDir := CmdLOpts.ValueFromIndex[i]
     else
       OutDir := GetEXEPath();
 
     //Process t option - port number to listen for http server
-    i:=Opts.IndexOfName('t');
+    i:=CmdLOpts.IndexOfName('t');
     If i <> -1 then
     begin
-      ServerPort := StrToInt(Opts.ValueFromIndex[i]);
-      LogFmt('User specified port: %d',[ServerPort]);
+      Opts.ServerPort := StrToInt(CmdLOpts.ValueFromIndex[i]);
+      LogFmt('User specified port: %d',[Opts.ServerPort]);
     end
     else
-      ServerPort := 0; //Try different ports
+      Opts.ServerPort := 0; //Try different ports
 
     //Process h option
     if HasOption('h','help') then
@@ -100,25 +101,35 @@ begin
 
     //Process s option - no browser
     if HasOption('s') then
-      TwexeOptions := TwexeOptions - [toOpenBrowser];
+      Opts.Flags := Opts.Flags - [toOpenBrowser];
 
     //Process p option - programatic run from program/script
     if HasOption('p') then
     begin
-      TwexeOptions := TwexeOptions + [toProgramaticRun] - [toOpenBrowser];
+      Opts.Flags := Opts.Flags + [toProgramaticRun] - [toOpenBrowser];
     end;
 
-
+    //Process r option - bind to 0.0.0.0 or specified address
+    //to allow remote clients
+    i:=CmdLOpts.IndexOfName('r');
     if HasOption('r') then
-      TwexeOptions := TwexeOptions + [toAllowRemoteClients];
+    begin
+      Opts.Flags := Opts.Flags + [toAllowRemoteClients];
+      If i <> -1 then //Remote address specified
+        Opts.ServerBindAddress := CmdLOpts.ValueFromIndex[i]
+      else
+        Opts.ServerBindAddress := '' //same as 0.0.0.0, listen on all ifaces
+    end
+    else //Listen only locally
+      Opts.ServerBindAddress := '127.0.0.1';
 
   finally
     SetLength(FileArgs,NonOpts.Count);
     For i:=0 to NonOpts.Count - 1 do
        FileArgs[i] := NonOpts[i];
 
-    If Assigned(Opts) then
-      FreeAndNil(Opts);
+    If Assigned(CmdLOpts) then
+      FreeAndNil(CmdLOpts);
     If Assigned(NonOpts) then
       FreeAndNil(NonOpts);
   end;
@@ -127,7 +138,7 @@ end;
 procedure TTwexeApp.DoRun;
 begin
   try
-    //Handle cmdline args, and set values in twexemain.Twexeoptions
+    //Handle cmdline args, and set values in twexemain.Opts
     ProcessOptions();
 
     If Terminated then
@@ -153,7 +164,7 @@ begin
       Exit;
     end;
 
-    { Run main function - options have been written to twexeoptions in twexemain}
+    { Run main function - options have been written to twexemain.Opts }
     Twexemain.TwexeMain(OrigExeFile, FileArgs);
 
     // stop program loop
