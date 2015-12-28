@@ -41,6 +41,11 @@ end;
 procedure UnixHandleSignal(Sig : cint);cdecl;
 begin
   CleanupOnExit();
+  //Now end the process
+  //This will not cause infinite recursion because we
+  //installed the Signal Handler with the SA_ONESHOT flag
+  FpKill(GetProcessID(),SIGTERM);
+
 end;
 
 function InstallExitHandler():boolean;
@@ -53,7 +58,7 @@ begin
    new(oa);
    na^.sa_Handler:=SigActionHandler(@UnixHandleSignal);
    fillchar(na^.Sa_Mask,sizeof(na^.sa_mask),#0);
-   na^.Sa_Flags:=SA_ONESHOT;
+   na^.Sa_Flags:=SA_ONESHOT or SA_RESTART;
    {$ifdef Linux}               // Linux specific
      na^.Sa_Restorer:=Nil;
    {$endif}

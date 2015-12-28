@@ -2,42 +2,7 @@
 <CONFIG>
   <ProjectSession>
     <Version Value="9"/>
-    <BuildModes Count="1" Active="Release">
-      <Item1 Name="Release">
-        <CompilerOptions>
-          <Version Value="11"/>
-          <Target>
-            <Filename Value="../build/$(TargetCPU)-$(TargetOS)/twexe"/>
-          </Target>
-          <SearchPaths>
-            <IncludeFiles Value="$(ProjOutDir)"/>
-            <UnitOutputDirectory Value="../build/$(TargetCPU)-$(TargetOS)"/>
-          </SearchPaths>
-          <CodeGeneration>
-            <SmartLinkUnit Value="True"/>
-            <Optimizations>
-              <OptimizationLevel Value="3"/>
-            </Optimizations>
-          </CodeGeneration>
-          <Linking>
-            <Debugging>
-              <GenerateDebugInfo Value="False"/>
-            </Debugging>
-            <LinkSmart Value="True"/>
-          </Linking>
-          <Other>
-            <ExecuteBefore>
-              <Command Value="$(make) -f $(ProjSrcPath)/../Makefile version"/>
-              <ShowAllMessages Value="True"/>
-              <CompileReasons Compile="False" Run="False"/>
-            </ExecuteBefore>
-            <ExecuteAfter>
-              <ScanForMakeMsgs Value="True"/>
-            </ExecuteAfter>
-          </Other>
-        </CompilerOptions>
-      </Item1>
-    </BuildModes>
+    <BuildModes Active="Release"/>
     <Units Count="22">
       <Unit0>
         <Filename Value="twexe.lpr"/>
@@ -51,10 +16,9 @@
       <Unit1>
         <Filename Value="twexehttpserver.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <TopLine Value="147"/>
-        <CursorPos X="38" Y="184"/>
+        <CursorPos X="23" Y="161"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit1>
@@ -126,6 +90,7 @@
       <Unit9>
         <Filename Value="windowslib.pas"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="3"/>
         <TopLine Value="42"/>
         <CursorPos X="50" Y="62"/>
@@ -137,7 +102,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="5"/>
         <TopLine Value="32"/>
-        <CursorPos Y="14"/>
+        <CursorPos X="58" Y="46"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit10>
@@ -172,7 +137,7 @@
         <EditorIndex Value="6"/>
         <TopLine Value="102"/>
         <CursorPos X="13" Y="135"/>
-        <UsageCount Value="140"/>
+        <UsageCount Value="142"/>
         <Loaded Value="True"/>
       </Unit14>
       <Unit15>
@@ -221,7 +186,7 @@
         <EditorIndex Value="4"/>
         <TopLine Value="33"/>
         <CursorPos X="5" Y="42"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="17"/>
         <Loaded Value="True"/>
       </Unit21>
     </Units>
