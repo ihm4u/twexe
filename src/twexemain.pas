@@ -272,8 +272,13 @@ implementation
     else  //Restart executable without opening the browser
       Opts := ' -s';
 
-    //Add all other propagated options except the browser option
-    Opts := Opts + ' -t ' + IntToStr(Port) + ' ' + GetInheritableOpts(True,True);
+    //We need to add the port on restart to assure same port
+    //after store request
+    If Port <> 0 then
+      Opts := Opts + ' -t ' + IntToStr(Port);
+
+    //Add all other propagated options except the browser and port options
+    Opts := Opts + GetInheritableOpts(True,True);
 
     //This causes the server to wait for all requests
     //to be finished
