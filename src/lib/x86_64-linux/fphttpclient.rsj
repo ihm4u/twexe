@@ -1,0 +1,10 @@
+{"version":1,"strings":[
+{"hash":131170978,"name":"fphttpclient.serrinvalidprotocol","sourcebytes":[73,110,118,97,108,105,100,32,112,114,111,116,111,99,111,108,32,58,32,34,37,115,34],"value":"Invalid protocol : \"%s\""},
+{"hash":54284372,"name":"fphttpclient.serrreadingsocket","sourcebytes":[69,114,114,111,114,32,114,101,97,100,105,110,103,32,100,97,116,97,32,102,114,111,109,32,115,111,99,107,101,116],"value":"Error reading data from socket"},
+{"hash":167542578,"name":"fphttpclient.serrinvalidprotocolversion","sourcebytes":[73,110,118,97,108,105,100,32,112,114,111,116,111,99,111,108,32,118,101,114,115,105,111,110,32,105,110,32,114,101,115,112,111,110,115,101,58,32,34,37,115,34],"value":"Invalid protocol version in response: \"%s\""},
+{"hash":180839235,"name":"fphttpclient.serrinvalidstatuscode","sourcebytes":[73,110,118,97,108,105,100,32,114,101,115,112,111,110,115,101,32,115,116,97,116,117,115,32,99,111,100,101,58,32,37,115],"value":"Invalid response status code: %s"},
+{"hash":166308932,"name":"fphttpclient.serrunexpectedresponse","sourcebytes":[85,110,101,120,112,101,99,116,101,100,32,114,101,115,112,111,110,115,101,32,115,116,97,116,117,115,32,99,111,100,101,58,32,37,100],"value":"Unexpected response status code: %d"},
+{"hash":79504839,"name":"fphttpclient.serrchunktoobig","sourcebytes":[67,104,117,110,107,32,116,111,111,32,98,105,103],"value":"Chunk too big"},
+{"hash":28535223,"name":"fphttpclient.serrchunklineendmissing","sourcebytes":[67,104,117,110,107,32,108,105,110,101,32,101,110,100,32,109,105,115,115,105,110,103],"value":"Chunk line end missing"},
+{"hash":160949188,"name":"fphttpclient.serrmaxredirectsreached","sourcebytes":[77,97,120,105,109,117,109,32,97,108,108,111,119,101,100,32,114,101,100,105,114,101,99,116,115,32,114,101,97,99,104,101,100,32,58,32,37,100],"value":"Maximum allowed redirects reached : %d"}
+]}

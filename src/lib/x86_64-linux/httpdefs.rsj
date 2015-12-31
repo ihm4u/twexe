@@ -1,0 +1,10 @@
+{"version":1,"strings":[
+{"hash":176003220,"name":"httpdefs.serrcontentalreadysent","sourcebytes":[72,84,84,80,32,82,101,115,112,111,110,115,101,32,99,111,110,116,101,110,116,32,119,97,115,32,97,108,114,101,97,100,121,32,115,101,110,116],"value":"HTTP Response content was already sent"},
+{"hash":46655396,"name":"httpdefs.serrheadersalreadysent","sourcebytes":[72,84,84,80,32,104,101,97,100,101,114,115,32,119,101,114,101,32,97,108,114,101,97,100,121,32,115,101,110,116],"value":"HTTP headers were already sent"},
+{"hash":2402210,"name":"httpdefs.serrinternaluploadedfileerror","sourcebytes":[73,110,116,101,114,110,97,108,32,117,112,108,111,97,100,101,100,32,102,105,108,101,32,99,111,110,102,105,103,117,114,97,116,105,111,110,32,101,114,114,111,114],"value":"Internal uploaded file configuration error"},
+{"hash":134726178,"name":"httpdefs.serrnosuchuploadedfile","sourcebytes":[78,111,32,115,117,99,104,32,117,112,108,111,97,100,101,100,32,102,105,108,101,32,58,32,34,37,115,34],"value":"No such uploaded file : \"%s\""},
+{"hash":184747106,"name":"httpdefs.serrunknowncookie","sourcebytes":[85,110,107,110,111,119,110,32,99,111,111,107,105,101,58,32,34,37,115,34],"value":"Unknown cookie: \"%s\""},
+{"hash":267366786,"name":"httpdefs.serrunsupportedcontenttype","sourcebytes":[85,110,115,117,112,112,111,114,116,101,100,32,99,111,110,116,101,110,116,32,116,121,112,101,58,32,34,37,115,34],"value":"Unsupported content type: \"%s\""},
+{"hash":262878222,"name":"httpdefs.serrnorequestmethod","sourcebytes":[78,111,32,82,69,81,85,69,83,84,95,77,69,84,72,79,68,32,112,97,115,115,101,100,32,102,114,111,109,32,115,101,114,118,101,114,46],"value":"No REQUEST_METHOD passed from server."},
+{"hash":208469294,"name":"httpdefs.serrinvalidrequestmethod","sourcebytes":[73,110,118,97,108,105,100,32,82,69,81,85,69,83,84,95,77,69,84,72,79,68,32,112,97,115,115,101,100,32,102,114,111,109,32,115,101,114,118,101,114,58,32,37,115,46],"value":"Invalid REQUEST_METHOD passed from server: %s."}
+]}

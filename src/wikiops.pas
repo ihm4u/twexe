@@ -7,7 +7,7 @@ unit wikiops;
 interface
 
 uses
-  SysUtils,Classes,regexpr,
+  SysUtils,Classes,regexpr, crc,
   
   logger,fileops,exedata,
   {$ifdef unix}
@@ -36,6 +36,9 @@ uses
   function ExeNameToWikiName(const ExeName:string):string;
 
 implementation
+  type
+    TReplaced = (roReplaced,roNoMatch,roMayMatch);
+
   //FIXME: use these two functions any time we need a wiki name
   // from an exe name or viceversa
   function WikiNameToExeName(const WikiName:string):string;
@@ -196,7 +199,14 @@ implementation
     SBuffer := ReplaceRegExpr(Regex,SBuffer,'$1'+NewCfg+'$2',True);
   end;
 
-  procedure ReplaceOrAddConfig(var S:string; const Port:Integer; const When:Integer);
+  function crc64(const S:string):QWord;
+  begin
+    Result:=crc.crc64(0,Nil,0);
+    If Length(S) > 0 then
+      Result:=crc.crc64(Result,@S[1],Length(S));
+  end;
+
+  function ReplaceOrAddConfig(var S:string; const Port:Integer; const When:Integer):TReplaced;
   Const
      UNTitle='title="$:/UploadName"';
      UURLTitle='title="$:/UploadURL"';
@@ -204,9 +214,13 @@ implementation
      PasswordChk='UploadPlugin';
   Var
     PortStr: string;
+    OldCrc: QWord;
 
   begin
     PortStr := IntToStr(Port);
+    OldCrc := crc64(S);
+
+    Result := roNoMatch;
     //Attempt change only if we may have a section that matters
     //Otherwise return quickly without changing anything
     If (Pos(UNTitle,S)<>0)  //We may have an uploadName tiddler
@@ -215,6 +229,7 @@ implementation
        or (Pos(PasswordChk,S)<>0) //We have the section for password check
        then
     begin
+      Result := roMayMatch;
       //The check for empty password (for automatic save)
       //is done only if the wiki name is not twexe
       //(in the saving tab of the wikis control panel)
@@ -239,6 +254,11 @@ implementation
           ReplaceUploadURL(S,PortStr,When);
         end;
       end;
+
+      //If a replacement was made the CRCs will be different
+      If OldCrc <> crc64(S) then
+        Result := roReplaced;
+
     end;
 
   end;
@@ -250,7 +270,8 @@ implementation
   var
     WikiS,OutS: TFileStream;
     ReadCount: LongInt;
-    Buffer: string;
+    OldBuf,Buffer: string;
+    Changed: TReplaced;
   begin
     Result := False;
     try
@@ -258,6 +279,7 @@ implementation
       // 2. Update buffer if necessary
       // 3. Write buffer back to output wikifile
       SetLength(Buffer,BUFSIZE);
+      SetLength(OldBuf,BUFSIZE);
       MakeDirs(OutFile);
       WikiS := TFileStream.Create(WikiFile, fmOpenRead or fmShareDenyWrite);
       OutS := TFileStream.Create(OutFile, fmCreate);
@@ -273,21 +295,43 @@ implementation
       ReplaceOrAddConfig(Buffer,Port,When);
       OutS.Write(Buffer[1],Length(Buffer)*SizeOf(Char));
       repeat
-        WikiS.Seek(-OVERLAP,soCurrent);
         ReadCount := WikiS.Read(Buffer[1],BUFSIZE);
         SetLength(Buffer,ReadCount);
-        ReplaceOrAddConfig(Buffer,Port,When);
-        OutS.Write(Buffer[OVERLAP+1],Length(Buffer)*SizeOf(Char)-OVERLAP);
+        Changed := ReplaceOrAddConfig(Buffer,Port,When);
+        OutS.Write(Buffer[1],Length(Buffer)*SizeOf(Char));
+        if Changed = roNoMatch then
+            //No Match, backtrack and see if we get a match
+            //in overlap between previous buffer and this one
+            begin
+              //Rewind input stream
+              WikiS.Seek(-OVERLAP,soCurrent);
+              ReadCount := WikiS.Read(Buffer[1],BUFSIZE);
+
+              //We may have read less than BUFSIZE
+              SetLength(Buffer,ReadCount);
+
+              //Update buffer with regex substitutions if any
+              ReplaceOrAddConfig(Buffer,Port,When);
+
+              //Synchronize output stream
+              OutS.Seek(-OVERLAP,soCurrent);
+
+              //Write the buffer at the synchronized position
+              //The buffer would have stayed the same if there
+              //was no match
+              OutS.Write(Buffer[1],Length(Buffer)*SizeOf(Char));
+            end;
       until (WikiS.Position = WikiS.Size);
       
       //The writing of updated wiki succeded
       Result := True;
-    except
+    finally
+      if Assigned(WikiS) then
+        FreeAndNil(WikiS);
+      if Assigned(OutS) then
+        FreeAndNil(OutS);
     end;
-    if Assigned(WikiS) then
-      FreeAndNil(WikiS);
-    if Assigned(OutS) then
-      FreeAndNil(OutS);
+
   end;
 
   function EnsureTwexeSavingConfig(const WikiFile: string; const OutFile: string; 

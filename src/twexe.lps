@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="17">
+      <Unit0>
+        <Filename Value="twexe.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <TopLine Value="13"/>
+        <CursorPos X="42" Y="26"/>
+        <UsageCount Value="53"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="twexehttpserver.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="twexemain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="wikiops.pas"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="306"/>
+        <CursorPos X="9" Y="337"/>
+        <UsageCount Value="53"/>
+        <Bookmarks Count="1">
+          <Item0 X="24" Y="220"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="version.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="exedata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="fileops.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="textops.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="logger.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="windowslib.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="unixlib.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="httpdefs.pp"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="HTTPDefs"/>
+        <UsageCount Value="53"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="fphttpserver.pp"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="fphttpclient.pp"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="upgrade.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="53"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="/usr/lib/fpc/src/packages/hash/src/crc.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="834"/>
+        <CursorPos Y="867"/>
+        <UsageCount Value="7"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="/usr/lib/fpc/src/packages/mad/src/mad.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="518"/>
+        <CursorPos X="26" Y="546"/>
+        <UsageCount Value="7"/>
+      </Unit16>
+    </Units>
+    <JumpHistory Count="2" HistoryIndex="1">
+      <Position1>
+        <Filename Value="wikiops.pas"/>
+        <Caret Line="202" Column="22" TopLine="195"/>
+      </Position1>
+      <Position2>
+        <Filename Value="wikiops.pas"/>
+        <Caret Line="10" Column="32"/>
+      </Position2>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>

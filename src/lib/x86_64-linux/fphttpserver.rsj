@@ -1,0 +1,5 @@
+{"version":1,"strings":[
+{"hash":23178741,"name":"fphttpserver.serrsocketactive","sourcebytes":[79,112,101,114,97,116,105,111,110,32,110,111,116,32,97,108,108,111,119,101,100,32,119,104,105,108,101,32,115,101,114,118,101,114,32,105,115,32,97,99,116,105,118,101],"value":"Operation not allowed while server is active"},
+{"hash":102143588,"name":"fphttpserver.serrreadingsocket","sourcebytes":[69,114,114,111,114,32,114,101,97,100,105,110,103,32,100,97,116,97,32,102,114,111,109,32,116,104,101,32,115,111,99,107,101,116],"value":"Error reading data from the socket"},
+{"hash":4490484,"name":"fphttpserver.serrmissingprotocol","sourcebytes":[77,105,115,115,105,110,103,32,72,84,84,80,32,112,114,111,116,111,99,111,108,32,118,101,114,115,105,111,110,32,105,110,32,114,101,113,117,101,115,116],"value":"Missing HTTP protocol version in request"}
+]}
