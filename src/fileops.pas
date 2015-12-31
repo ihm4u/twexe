@@ -7,7 +7,14 @@ interface
 
 uses
   SysUtils, Classes,
-  logger, regexpr;
+  logger, regexpr,
+  {$ifdef unix}
+  unixlib
+  {$endif}
+  {$ifdef windows}
+  windowslib
+  {$endif}
+  ;
 
 type
   TFileFuncName = function(const FileName: string;
@@ -15,6 +22,7 @@ type
 
 //Return the name of the file without extension or directory path
 function FileNameNoExt(Name:String):String;
+function FileNameNoEXEExt(Name:String):String;
 function MakeDirs(Dirs: string): boolean;
 function CopyFile(FromName: string; ToName: string; DeleteOriginal: boolean = False;
   const Count: longint = -1): boolean;
@@ -62,6 +70,16 @@ end;
 function FileNameNoExt(Name:String):String;
 begin
    Result:=ChangeFileExt(ExtractFileName(Name),'');
+end;
+
+function FileNameNoEXEExt(Name:String):String;
+Var
+  OSExt:string='';
+begin
+   Result := ExtractFileName(Name);
+   OSExt := GetOSEXEExt();
+   If (OSExt <> '') and (ExtractFileExt(Name) = OSExt) then
+      Result:=ChangeFileExt(Result,'');
 end;
 
 procedure ForEachFile(const WildPath: string; Func: TFileFuncName;

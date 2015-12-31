@@ -86,7 +86,7 @@ end;
 //
 function GetEXEName():String;
 begin
-   Result:=FileNameNoExt(ParamStr(0));
+   Result:=FileNameNoEXEExt(ParamStr(0));
    if (Result[1]='_') then
       Delete(Result,1,1);
 end;
@@ -105,7 +105,7 @@ Var
    ExeName:string;
 begin
    Result:=False;
-   ExeName:=FileNameNoExt(ParamStr(0));
+   ExeName:=FileNameNoEXEExt(ParamStr(0));
    If ExeName[1]='_' then
       Result:=True;
 end;
@@ -211,7 +211,7 @@ begin
           AProcess.Parameters.StrictDelimiter:=True;
           AProcess.Parameters.Delimiter:=' ';
           Show(Format('External process ''%S'' exceeded alloted time (used %d secs). Terminating it.',
-            [FileNameNoExt(AProcess.Executable) + ' '
+            [FileNameNoEXEExt(AProcess.Executable) + ' '
              + Aprocess.Parameters.DelimitedText,
              RunningSecs]));
         end;
