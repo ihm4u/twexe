@@ -270,7 +270,7 @@ implementation
   var
     WikiS,OutS: TFileStream;
     ReadCount: LongInt;
-    OldBuf,Buffer: string;
+    ChStr,Buffer: string;
     Changed: TReplaced;
   begin
     Result := False;
@@ -279,7 +279,6 @@ implementation
       // 2. Update buffer if necessary
       // 3. Write buffer back to output wikifile
       SetLength(Buffer,BUFSIZE);
-      SetLength(OldBuf,BUFSIZE);
       MakeDirs(OutFile);
       WikiS := TFileStream.Create(WikiFile, fmOpenRead or fmShareDenyWrite);
       OutS := TFileStream.Create(OutFile, fmCreate);
@@ -295,8 +294,10 @@ implementation
       ReplaceOrAddConfig(Buffer,Port,When);
       OutS.Write(Buffer[1],Length(Buffer)*SizeOf(Char));
       repeat
+        SetLength(Buffer,BUFSIZE);
         ReadCount := WikiS.Read(Buffer[1],BUFSIZE);
         SetLength(Buffer,ReadCount);
+
         Changed := ReplaceOrAddConfig(Buffer,Port,When);
         OutS.Write(Buffer[1],Length(Buffer)*SizeOf(Char));
         if Changed = roNoMatch then
@@ -305,13 +306,16 @@ implementation
             begin
               //Rewind input stream
               WikiS.Seek(-OVERLAP,soCurrent);
+              SetLength(Buffer,BUFSIZE);
               ReadCount := WikiS.Read(Buffer[1],BUFSIZE);
 
               //We may have read less than BUFSIZE
+              ReturnNilIfGrowHeapFails:=True;
               SetLength(Buffer,ReadCount);
 
               //Update buffer with regex substitutions if any
-              ReplaceOrAddConfig(Buffer,Port,When);
+              Changed:=ReplaceOrAddConfig(Buffer,Port,When);
+              WriteStr(ChStr,Changed);
 
               //Synchronize output stream
               OutS.Seek(-OVERLAP,soCurrent);
